@@ -209,17 +209,7 @@ function handleBook() {
 
   function shouldStartVideo() {
     var rect = section.getBoundingClientRect();
-    return rect.bottom > 0 && rect.top < window.innerHeight * 0.95;
-  }
-
-  function syncVideoState() {
-    if (shouldStartVideo()) {
-      sectionInView = true;
-      doPlay();
-    } else {
-      sectionInView = false;
-      video.pause();
-    }
+    return rect.top < window.innerHeight * 0.95 && rect.bottom > 0;
   }
 
   /* ── Estado visual play / pause ── */
@@ -244,20 +234,25 @@ function handleBook() {
    *  relaja las restricciones para llamadas programáticas posteriores a play().
    */
   function doPlay() {
-    video.muted = true;            /* garantiza autoplay en todos los navegadores */
-    var p = video.play();
-    if (p === undefined) {         /* API síncrona — navegadores muy antiguos */
-      video.muted = false;
-      setPlaying(true);
+    if (!video || !video.readyState) return;
+    var playPromise = void 0;
+    try {
+      playPromise = video.play();
+    } catch (e) {
       return;
     }
-    p.then(function() {
-      video.muted = false;         /* activa audio en cuanto el video corre */
+    if (playPromise && playPromise.then) {
+      playPromise.then(function() {
+        video.muted = false;
+        setPlaying(true);
+      }).catch(function() {
+        video.muted = true;
+        setPlaying(false);
+      });
+    } else {
+      video.muted = false;
       setPlaying(true);
-    }).catch(function() {
-      /* Política del navegador bloquea incluso muted — el botón Play queda visible */
-      setPlaying(false);
-    });
+    }
   }
 
   /*
@@ -281,16 +276,13 @@ function handleBook() {
 
   if (btnReplay) {
     btnReplay.addEventListener('click', function() {
-      /*
-       * Replay: regresa al inicio y arranca automáticamente.
-       * Usamos `seeked` para garantizar que currentTime llegó a 0
-       * antes de llamar play() — necesario en Safari donde seek es asíncrono.
-       */
       video.pause();
       video.currentTime = 0;
       video.addEventListener('seeked', function onSeeked() {
         video.removeEventListener('seeked', onSeeked);
-        doPlay();
+        if (shouldStartVideo()) {
+          doPlay();
+        }
       });
     });
   }
@@ -299,22 +291,31 @@ function handleBook() {
   var entryObs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        syncVideoState();
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          if (overlay) overlay.classList.add('show');
-          if (content) content.classList.add('show');
+        sectionInView = true;
+        if (shouldStartVideo()) {
+          doPlay();
         }
-      } else if (!entry.isIntersecting) {
+      } else {
         sectionInView = false;
         video.pause();
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -10% 0px' });
+  }, { threshold: 0.3 });
 
   entryObs.observe(section);
-  video.addEventListener('loadeddata', syncVideoState);
-  window.addEventListener('scroll', syncVideoState, { passive: true });
-  window.addEventListener('load', syncVideoState);
+
+  var onScrollCheck = function() {
+    if (shouldStartVideo() && !sectionInView) {
+      sectionInView = true;
+      doPlay();
+    } else if (!shouldStartVideo() && sectionInView) {
+      sectionInView = false;
+      video.pause();
+    }
+  };
+
+  window.addEventListener('scroll', onScrollCheck, { passive: true });
+  window.addEventListener('load', onScrollCheck);
 
   /* ── Paso 2: reveal bidireccional (texto aparece al 55 %, se oculta al 25 %) ── */
   function onScroll() {
