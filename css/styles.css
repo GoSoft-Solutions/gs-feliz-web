@@ -212,7 +212,7 @@ a { text-decoration: none; color: inherit; }
 .qs-sub { font-size: 15px; font-weight: 300; color: var(--w60); line-height: 1.7; max-width: none; }
 
 /* Desktop: horizontal scroll */
-.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 var(--sp-x) 44px; cursor: grab; }
+.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 var(--sp-x) 36px; cursor: grab; }
 .qs-track-w::-webkit-scrollbar { display: none; }
 .qs-track-w.grabbing { cursor: grabbing; }
 .qs-track { display: flex; gap: 16px; width: max-content; }
@@ -250,7 +250,7 @@ a { text-decoration: none; color: inherit; }
 .qs-role { font-family: var(--f-d); font-size: clamp(32px, 3vw, 42px); letter-spacing: 0.03em; color: var(--white); display: block; line-height: 0.95; }
 
 .qs-card-sub {
-  padding: 14px 4px 0;
+  padding: 18px 6px 0;
   font-size: 14px;
   font-weight: 300;
   color: var(--w80);
@@ -261,13 +261,13 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 40px;
-  margin-bottom: 18px;
+  gap: 32px;
+  margin-bottom: 10px;
 }
 
 .qs-sub-text {
   flex: 1;
-  padding-right: 16px;
+  padding-right: 12px;
 }
 
 .qs-arrows {
@@ -514,7 +514,7 @@ a { text-decoration: none; color: inherit; }
 
 /* Session selector */
 @media (hover: hover) and (pointer: fine) { .ss-pill:hover { border-color: var(--o20); } }
-.ss-pill.active 
+
 /* Calendar */
 @media (hover: hover) and (pointer: fine) { .cal-navb:hover { background: var(--w10); color: var(--white); } }
 @media (hover: hover) and (pointer: fine) { .cal-d.avail:hover { background: var(--w10); } }
