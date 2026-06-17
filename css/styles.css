@@ -206,8 +206,8 @@ a { text-decoration: none; color: inherit; }
 .btn-hero:active { transform: scale(0.97); }
 
 /* ═══ S2 — QUIÉN SOY ═══ */
-.qs { background: var(--black); padding: var(--sp-y) 0; overflow: hidden; }
-.qs-hdr { padding: 0 var(--sp-x); margin-bottom: 12px; }
+.qs { background: var(--black); padding: 48px 0 var(--sp-y); overflow: hidden; }
+.qs-hdr { padding: 0 var(--sp-x); margin-bottom: 8px; }
 .qs-t { font-family: var(--f-d); font-size: clamp(42px, 5.5vw, 68px); letter-spacing: 0.02em; color: var(--white); line-height: 0.95; margin-bottom: 14px; text-wrap: balance; }
 .qs-sub { font-size: 15px; font-weight: 300; color: var(--w60); line-height: 1.7; max-width: none; }
 
@@ -261,10 +261,13 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
+  gap: 32px;
 }
 
-.qs-sub-text { flex: 1; }
+.qs-sub-text {
+  flex: 1;
+  padding-right: 8px;
+}
 
 .qs-arrows {
   display: flex;
