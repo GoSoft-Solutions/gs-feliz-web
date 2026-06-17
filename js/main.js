@@ -282,18 +282,20 @@ function handleBook() {
 
   /* ── Paso 1: arrancar / pausar según visibilidad de la sección ── */
   var entryObs = new IntersectionObserver(function(entries) {
-    if (entries[0].isIntersecting) {
-      sectionInView = true;
-      doPlay();
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        if (overlay) overlay.classList.add('show');
-        if (content) content.classList.add('show');
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        sectionInView = true;
+        doPlay();
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          if (overlay) overlay.classList.add('show');
+          if (content) content.classList.add('show');
+        }
+      } else {
+        sectionInView = false;
+        video.pause();
       }
-    } else {
-      sectionInView = false;
-      video.pause();
-    }
-  }, { threshold: 0 });
+    });
+  }, { threshold: 0.35 });
 
   entryObs.observe(section);
 
