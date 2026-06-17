@@ -206,13 +206,13 @@ function handleBook() {
 
   var textVisible   = false;
   var sectionInView = false;
+  var hasStarted    = false;
 
-  function shouldStartVideo() {
+  function isSectionVisible() {
     var rect = section.getBoundingClientRect();
-    return rect.top < window.innerHeight * 0.95 && rect.bottom > 0;
+    return rect.top <= window.innerHeight * 0.98 && rect.bottom >= 0;
   }
 
-  /* ── Estado visual play / pause ── */
   function setPlaying(playing) {
     if (controls) controls.classList.toggle('playing', playing);
   }
@@ -234,17 +234,27 @@ function handleBook() {
    *  relaja las restricciones para llamadas programáticas posteriores a play().
    */
   function doPlay() {
-    if (!video || !video.readyState) return;
-    var playPromise = void 0;
+    if (!video) return;
+
+    if (video.readyState < 2) {
+      video.load();
+      return;
+    }
+
+    if (hasStarted && !video.paused) return;
+
+    var playPromise;
     try {
       playPromise = video.play();
     } catch (e) {
       return;
     }
+
     if (playPromise && playPromise.then) {
       playPromise.then(function() {
         video.muted = false;
         setPlaying(true);
+        hasStarted = true;
       }).catch(function() {
         video.muted = true;
         setPlaying(false);
@@ -252,6 +262,7 @@ function handleBook() {
     } else {
       video.muted = false;
       setPlaying(true);
+      hasStarted = true;
     }
   }
 
@@ -268,7 +279,9 @@ function handleBook() {
       setPlaying(true);
     }
   });
-  video.addEventListener('pause', function() { setPlaying(false); });
+  video.addEventListener('pause', function() {
+    setPlaying(false);
+  });
 
   /* ── Botones de control ── */
   if (btnPlay)  btnPlay.addEventListener('click',  function() { doPlay(); });
@@ -280,37 +293,41 @@ function handleBook() {
       video.currentTime = 0;
       video.addEventListener('seeked', function onSeeked() {
         video.removeEventListener('seeked', onSeeked);
-        if (shouldStartVideo()) {
+        if (isSectionVisible()) {
           doPlay();
         }
       });
     });
   }
 
-  /* ── Paso 1: arrancar / pausar según visibilidad de la sección ── */
   var entryObs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         sectionInView = true;
-        if (shouldStartVideo()) {
-          doPlay();
-        }
+        doPlay();
       } else {
         sectionInView = false;
-        video.pause();
+        if (!video.paused) {
+          video.pause();
+        }
       }
     });
-  }, { threshold: 0.3 });
+  }, {
+    threshold: 0.05,
+    rootMargin: '0px 0px -5% 0px'
+  });
 
   entryObs.observe(section);
 
   var onScrollCheck = function() {
-    if (shouldStartVideo() && !sectionInView) {
+    if (isSectionVisible()) {
       sectionInView = true;
       doPlay();
-    } else if (!shouldStartVideo() && sectionInView) {
+    } else if (sectionInView) {
       sectionInView = false;
-      video.pause();
+      if (!video.paused) {
+        video.pause();
+      }
     }
   };
 
