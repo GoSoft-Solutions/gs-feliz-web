@@ -207,6 +207,21 @@ function handleBook() {
   var textVisible   = false;
   var sectionInView = false;
 
+  function shouldStartVideo() {
+    var rect = section.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight * 0.95;
+  }
+
+  function syncVideoState() {
+    if (shouldStartVideo()) {
+      sectionInView = true;
+      doPlay();
+    } else {
+      sectionInView = false;
+      video.pause();
+    }
+  }
+
   /* ── Estado visual play / pause ── */
   function setPlaying(playing) {
     if (controls) controls.classList.toggle('playing', playing);
@@ -284,20 +299,22 @@ function handleBook() {
   var entryObs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        sectionInView = true;
-        doPlay();
+        syncVideoState();
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
           if (overlay) overlay.classList.add('show');
           if (content) content.classList.add('show');
         }
-      } else {
+      } else if (!entry.isIntersecting) {
         sectionInView = false;
         video.pause();
       }
     });
-  }, { threshold: 0.35 });
+  }, { threshold: 0.1, rootMargin: '0px 0px -10% 0px' });
 
   entryObs.observe(section);
+  video.addEventListener('loadeddata', syncVideoState);
+  window.addEventListener('scroll', syncVideoState, { passive: true });
+  window.addEventListener('load', syncVideoState);
 
   /* ── Paso 2: reveal bidireccional (texto aparece al 55 %, se oculta al 25 %) ── */
   function onScroll() {
