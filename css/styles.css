@@ -206,13 +206,13 @@ a { text-decoration: none; color: inherit; }
 .btn-hero:active { transform: scale(0.97); }
 
 /* ═══ S2 — QUIÉN SOY ═══ */
-.qs { background: var(--black); padding: 48px 0 var(--sp-y); overflow: hidden; }
+.qs { background: var(--black); padding: 48px 0 64px; overflow: hidden; }
 .qs-hdr { padding: 0 var(--sp-x); margin-bottom: 8px; }
 .qs-t { font-family: var(--f-d); font-size: clamp(42px, 5.5vw, 68px); letter-spacing: 0.02em; color: var(--white); line-height: 0.95; margin-bottom: 14px; text-wrap: balance; }
 .qs-sub { font-size: 15px; font-weight: 300; color: var(--w60); line-height: 1.7; max-width: none; }
 
 /* Desktop: horizontal scroll */
-.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 12px var(--sp-x) 48px; cursor: grab; }
+.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 12px var(--sp-x) 24px; cursor: grab; }
 .qs-track-w::-webkit-scrollbar { display: none; }
 .qs-track-w.grabbing { cursor: grabbing; }
 .qs-track { display: flex; gap: 16px; width: max-content; }
