@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz — by Daniel Corral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:ital,wght@0,300;0,500;0,700;1,300&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a href="#hero" class="nav-logo">FELIZ</a>
+  <ul class="nav-links" style="margin-left:auto;">
+    <li><a href="#quien-soy">Quién soy</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#pilares">Pilares</a></li>
+  </ul>
+  <button class="nav-cta" onclick="goTo('#pilares')">Comienza ahora</button>
+  <button class="nav-hamburger" id="hb" aria-label="Abrir menú" onclick="toggleMenu()">
+    <span class="hl"></span><span class="hl"></span><span class="hl"></span>
+  </button>
+</nav>
+
+<div class="mm" id="mm">
+  <a href="#quien-soy" onclick="closeMenu()">Quién soy</a>
+  <a href="#servicios" onclick="closeMenu()">Servicios</a>
+  <a href="#pilares" onclick="closeMenu()">Pilares</a>
+</div>
+
+<!-- S1 HERO -->
+<section class="hero" id="hero">
+  <div class="hero-card">
+    <img class="hero-card-img" src="../assets/4add77c029e47bdcf5ca4d9ffce37c8b4a3130df3e2bc972e353b2496e88b5d0.png" alt="Daniel Corral">
+    <div class="hero-card-overlay"></div>
+    <div class="hero-c">
+      <h1 class="hero-headline">No vine a enseñarte a ser perfecto. Vine a ayudarte a convertirte en tu mejor versión.</h1>
+      <div class="hero-acts">
+        <button class="btn-hero" onclick="goTo('#agenda')">Comienza tu transformación</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S2 QUIÉN SOY -->
+<section class="qs" id="quien-soy">
+  <div class="qs-hdr">
+    <div class="rv-clip" style="margin-bottom:14px;"><h2 class="qs-t rv-inner">¿QUIÉN SOY?</h2></div>
+    <div class="qs-sub-row rv">
+      <div class="qs-sub-text">
+        <p class="qs-sub">Entrené toda mi vida para convertirme en uno de los mejores del mundo.</p>
+        <p class="qs-sub" style="margin-top:6px;">Pero las lecciones más importantes no las aprendí compitiendo, las aprendí entendiendo quién soy.</p>
+      </div>
+      <div class="qs-arrows">
+        <button class="qs-arr-btn" onclick="scrollCards(-1)" aria-label="Anterior">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="qs-arr-btn" onclick="scrollCards(1)" aria-label="Siguiente">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop: horizontal scroll -->
+  <div class="qs-track-w" id="qsTrack">
+    <div class="qs-track">
+      <div class="qs-c rv" data-id="olimpico">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/olimpico.jpg" alt="Daniel Corral en argollas olímpicas"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">OLÍMPICO</span></div></div>
+        <div class="qs-card-sub">"Aprendí que la disciplina puede llevarte más lejos de lo que imaginabas."</div>
+      </div>
+      <div class="qs-c rv" data-id="medallista" style="transition-delay:40ms">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/medallista.jpg" alt="Daniel Corral medallista mundial"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">MEDALLISTA<br>MUNDIAL</span></div></div>
+        <div class="qs-card-sub">"Incluso los momentos más grandes duran poco. La persona que construyes permanece para siempre."</div>
+      </div>
+      <div class="qs-c rv" data-id="esposo" style="transition-delay:80ms">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/esposo.jpg" alt="Daniel Corral en su boda"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">ESPOSO</span></div></div>
+        <div class="qs-card-sub">"Amar no es encontrar a alguien perfecto, sino crecer junto a alguien todos los días."</div>
+      </div>
+      <div class="qs-c rv" data-id="creador" style="transition-delay:120ms">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/creador.jpg" alt="Daniel Corral creando contenido"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">CREADOR</span></div></div>
+        <div class="qs-card-sub">"Las historias son una manera de conectar, inspirar y recordarnos que todos intentamos entender esta vida."</div>
+      </div>
+      <div class="qs-c rv" data-id="autor" style="transition-delay:160ms">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/autor.jpg" alt="Daniel Corral con su libro"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">AUTOR</span></div></div>
+        <div class="qs-card-sub">"Muchas de las cosas que más me transformaron en la vida, primero tuvieron que ser escritas."</div>
+      </div>
+      <div class="qs-c rv" data-id="aprendiz" style="transition-delay:200ms">
+        <div class="qs-c-visual"><div class="qs-c-bg"><img src="img/aprendiz.jpg" alt="Daniel Corral en un velero"></div><div class="qs-stripe"></div><div class="qs-c-ct"><span class="qs-role">APRENDIZ<br>DE LA VIDA</span></div></div>
+        <div class="qs-card-sub">"Todavía no tengo todas las respuestas. Y quizá ahí comienza realmente el crecimiento."</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Mobile/Tablet: vertical stacked with parallax stagger -->
+  <div class="qs-vertical" id="qsVert">
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/olimpico.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">OLÍMPICO</span></div>
+      </div>
+      <div class="qs-v-sub">"Aprendí que la disciplina puede llevarte más lejos de lo que imaginabas."</div>
+    </div>
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/medallista.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">MEDALLISTA MUNDIAL</span></div>
+      </div>
+      <div class="qs-v-sub">"Incluso los momentos más grandes duran poco. La persona que construyes permanece para siempre."</div>
+    </div>
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/esposo.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">ESPOSO</span></div>
+      </div>
+      <div class="qs-v-sub">"Amar no es encontrar a alguien perfecto, sino crecer junto a alguien todos los días."</div>
+    </div>
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/creador.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">CREADOR</span></div>
+      </div>
+      <div class="qs-v-sub">"Las historias son una manera de conectar, inspirar y recordarnos que todos intentamos entender esta vida."</div>
+    </div>
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/autor.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">AUTOR</span></div>
+      </div>
+      <div class="qs-v-sub">"Las cosas que más me transformaron, primero tuvieron que ser escritas."</div>
+    </div>
+    <div class="qs-v-card">
+      <div class="qs-v-visual">
+        <img src="img/aprendiz.jpg" alt="Daniel Corral">
+        <div class="qs-stripe"></div>
+        <div class="qs-v-ct"><span class="qs-v-role">APRENDIZ DE LA VIDA</span></div>
+      </div>
+      <div class="qs-v-sub">"Todavía no tengo todas las respuestas. Y quizá ahí comienza realmente el crecimiento."</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- S3 QUÉ ES FELIZ -->
+<section class="qe" id="que-es">
+  <div class="qe-sticky">
+
+    <video class="qe-video" id="qeVideo" playsinline loop preload="auto" muted autoplay>
+      <source src="../assets/feliz-web.mp4" type="video/mp4">
+    </video>
+
+    <!-- Controles personalizados -->
+    <div class="qe-controls" id="qeControls">
+      <button class="qe-btn" id="qeBtnReplay" aria-label="Repetir desde el inicio">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 6V2L7 7L12 12V8C15.31 8 18 10.69 18 14C18 17.31 15.31 20 12 20C8.69 20 6 17.31 6 14H4C4 18.42 7.58 22 12 22C16.42 22 20 18.42 20 14C20 9.58 16.42 6 12 6Z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="qe-btn qe-btn-play" id="qeBtnPlay" aria-label="Reproducir">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8.5 8.64L13.77 12L8.5 15.36V8.64ZM6.5 5V19L17.5 12L6.5 5Z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="qe-btn qe-btn-pause" id="qeBtnPause" aria-label="Pausar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 19H10V5H6V19ZM14 5V19H18V5H14Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="qe-ov" id="qeOv"></div>
+    <div class="qe-ct" id="qeCt">
+      <h2 class="qe-title">Feliz es un espacio para personas que quieren dejar de <span class="qe-accent">sobrevivir</span> y empezar a vivir con intención</h2>
+      <div style="margin-top:28px;"><button class="btn-p" onclick="goTo('#pilares')">Empieza ahora <span class="bi">→</span></button></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- S4 SERVICIOS — comentado temporalmente, pendiente de trabajar
+<section class="srv" id="servicios">
+  <div class="srv-left">
+    <div class="srv-lb rv">1:1 con Daniel</div>
+    <div class="rv-clip" style="margin-bottom:8px;"><h2 class="srv-t rv-inner">SESIONES PRIVADAS</h2></div>
+    <p class="srv-sub rv">Sesiones donde defines tu dirección, ganas claridad y trabajas en lo que importa.</p>
+    <div class="srv-list rv">
+      <div class="srv-item"><span class="srv-n">VIDEOLLAMADA</span><span class="srv-det">Incluido</span><span class="srv-arr">→</span></div>
+      <div class="srv-item"><span class="srv-n">50 / 80 MIN</span><span class="srv-det">Duración</span><span class="srv-arr">→</span></div>
+      <div class="srv-item"><span class="srv-n">PERSONALIZADO</span><span class="srv-det">Enfoque</span><span class="srv-arr">→</span></div>
+      <div class="srv-item"><span class="srv-n">RECURSOS</span><span class="srv-det">Incluido</span><span class="srv-arr">→</span></div>
+    </div>
+    <div class="rv h" style="margin-top:32px;"><button class="btn-dark" onclick="goTo('#agenda')">Agenda tu sesión <span class="bi" style="background:rgba(240,237,230,0.1);">→</span></button></div>
+  </div>
+  <div class="srv-right rv">
+    <div class="srv-img-w"><div class="ph"><div class="ph-r"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span class="ph-l">Foto de Daniel</span></div></div>
+  </div>
+</section>
+-->
+
+<!-- S6 PILARES — comentado temporalmente, pendiente de trabajar
+<section class="pil" id="pilares">
+  <div class="rv-clip"><h2 class="pil-t rv-inner">SI ESTÁS LISTO PARA CONOCERTE, CRECER, SANAR Y CONSTRUIR UNA VIDA REAL. BIENVENIDO.</h2></div>
+  <div class="pil-body">
+    <div class="rv h"><div class="pil-img-w"><div class="ph"><div class="ph-r"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span class="ph-l">Foto de Daniel</span></div></div></div>
+    <div class="pil-right">
+      <p class="pil-intro rv">Cada pilar es un área de tu vida donde puedes crecer. No todo al mismo tiempo. Con intención, uno a la vez.</p>
+      <div class="pil-item rv" style="transition-delay:40ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Relaciones</div><div class="pil-ds">Aprende a amar mejor. Las relaciones son el espejo más claro de quién eres.</div></div></div>
+      <div class="pil-item rv" style="transition-delay:80ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Mindset</div><div class="pil-ds">Entrena tu mente como entrenas tu cuerpo. La disciplina mental es el diferenciador.</div></div></div>
+      <div class="pil-item rv" style="transition-delay:120ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Finanzas</div><div class="pil-ds">Construye tu libertad. La abundancia empieza con las creencias que tienes sobre el dinero.</div></div></div>
+      <div class="pil-item rv" style="transition-delay:160ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Identidad</div><div class="pil-ds">Conoce quién eres realmente. Todo lo demás viene después de eso.</div></div></div>
+    </div>
+  </div>
+</section>
+-->
+
+<!-- S7 FINAL -->
+<section class="final" id="final">
+  <div class="final-bg" id="finalBg">
+    <img src="../assets/97ed00a65fa777232def3c49e9526142e3474cefe403ba6170736b84af75df79.png" alt="" class="final-img">
+  </div>
+  <div class="final-ov"></div>
+  <div class="final-ct">
+    <div class="rv-clip" style="margin-bottom:28px;"><h2 class="final-t rv-inner">No sé en qué momento de tu vida estás</h2></div>
+    <p class="final-sub rv">Pero si llegaste aquí, quizás ya es momento de comenzar<br>a convertirte en la persona que sabes que puedes ser.</p>
+    <div class="rv h" style="margin-top:28px;"><button class="btn-p" onclick="goTo('#pilares')">Dar el paso <span class="bi">→</span></button></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="foot-logo">FELIZ</div>
+  <ul class="foot-links">
+    <li><a href="#quien-soy">Quién soy</a></li>
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#pilares">Pilares</a></li>
+  </ul>
+  <div class="foot-legal">© 2026 Feliz by Daniel Corral</div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
