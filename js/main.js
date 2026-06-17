@@ -207,10 +207,11 @@ function handleBook() {
   var textVisible   = false;
   var sectionInView = false;
   var hasStarted    = false;
+  var startAttempted = false;
 
   function isSectionVisible() {
     var rect = section.getBoundingClientRect();
-    return rect.top <= window.innerHeight * 0.98 && rect.bottom >= 0;
+    return rect.top <= window.innerHeight * 0.95 && rect.bottom >= 0;
   }
 
   function setPlaying(playing) {
@@ -234,14 +235,16 @@ function handleBook() {
    *  relaja las restricciones para llamadas programáticas posteriores a play().
    */
   function doPlay() {
-    if (!video) return;
+    if (!video || !isSectionVisible()) return;
+
+    if (startAttempted && hasStarted && !video.paused) return;
+
+    startAttempted = true;
 
     if (video.readyState < 2) {
       video.load();
       return;
     }
-
-    if (hasStarted && !video.paused) return;
 
     var playPromise;
     try {
@@ -258,6 +261,7 @@ function handleBook() {
       }).catch(function() {
         video.muted = true;
         setPlaying(false);
+        hasStarted = false;
       });
     } else {
       video.muted = false;
@@ -313,8 +317,8 @@ function handleBook() {
       }
     });
   }, {
-    threshold: 0.05,
-    rootMargin: '0px 0px -5% 0px'
+    threshold: 0.2,
+    rootMargin: '0px 0px -10% 0px'
   });
 
   entryObs.observe(section);
