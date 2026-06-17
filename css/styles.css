@@ -212,7 +212,7 @@ a { text-decoration: none; color: inherit; }
 .qs-sub { font-size: 15px; font-weight: 300; color: var(--w60); line-height: 1.7; max-width: none; }
 
 /* Desktop: horizontal scroll */
-.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 var(--sp-x) 36px; cursor: grab; }
+.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 var(--sp-x) 44px; cursor: grab; }
 .qs-track-w::-webkit-scrollbar { display: none; }
 .qs-track-w.grabbing { cursor: grabbing; }
 .qs-track { display: flex; gap: 16px; width: max-content; }
@@ -261,12 +261,13 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 32px;
+  gap: 40px;
+  margin-bottom: 18px;
 }
 
 .qs-sub-text {
   flex: 1;
-  padding-right: 8px;
+  padding-right: 16px;
 }
 
 .qs-arrows {
