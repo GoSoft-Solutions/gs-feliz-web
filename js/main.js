@@ -213,24 +213,6 @@ function handleBook() {
     if (controls) controls.classList.toggle('playing', playing);
   }
 
-  function enableAudio() {
-    userInteracted = true;
-    video.muted = false;
-    video.volume = 1;
-
-    if (video.paused) {
-      var rect = section.getBoundingClientRect();
-      var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
-      if (inView) {
-        video.play().then(function() {
-          setPlaying(true);
-        }).catch(function() {
-          setPlaying(false);
-        });
-      }
-    }
-  }
-
   function tryPlay() {
     if (!video) return;
 
@@ -243,6 +225,20 @@ function handleBook() {
     }).catch(function() {
       setPlaying(false);
     });
+  }
+
+  function enableAudio() {
+    userInteracted = true;
+    video.muted = false;
+    video.volume = 1;
+
+    if (video.paused) {
+      var rect = section.getBoundingClientRect();
+      var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
+      if (inView) {
+        tryPlay();
+      }
+    }
   }
 
   function updateVideo() {
@@ -266,10 +262,31 @@ function handleBook() {
     setPlaying(false);
   });
 
+  function onUserGesture() {
+    if (!userInteracted) {
+      userInteracted = true;
+      if (video.paused) {
+        var rect = section.getBoundingClientRect();
+        var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
+        if (inView) {
+          video.muted = false;
+          video.volume = 1;
+          tryPlay();
+        }
+      } else {
+        video.muted = false;
+        video.volume = 1;
+      }
+    }
+  }
+
   video.addEventListener('click', enableAudio);
   section.addEventListener('click', enableAudio);
   document.addEventListener('click', enableAudio, { passive: true });
   document.addEventListener('touchstart', enableAudio, { passive: true });
+  window.addEventListener('wheel', onUserGesture, { passive: true });
+  window.addEventListener('touchmove', onUserGesture, { passive: true });
+  window.addEventListener('scroll', onUserGesture, { passive: true });
 
   if (btnPlay) {
     btnPlay.addEventListener('click', function() {
