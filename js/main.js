@@ -192,154 +192,132 @@ function handleBook() {
 
 /* ── S3 QUÉ ES FELIZ: sticky video intro + controles + reveal bidireccional ── */
 (function() {
-  var section  = document.getElementById('que-es');
+  var section = document.getElementById('que-es');
   if (!section) return;
 
-  var video    = document.getElementById('qeVideo');
-  var overlay  = document.getElementById('qeOv');
-  var content  = document.getElementById('qeCt');
+  var video = document.getElementById('qeVideo');
+  var overlay = document.getElementById('qeOv');
+  var content = document.getElementById('qeCt');
   var controls = document.getElementById('qeControls');
-  var btnPlay  = document.getElementById('qeBtnPlay');
+  var btnPlay = document.getElementById('qeBtnPlay');
   var btnPause = document.getElementById('qeBtnPause');
-  var btnReplay= document.getElementById('qeBtnReplay');
+  var btnReplay = document.getElementById('qeBtnReplay');
   if (!video) return;
 
-  var textVisible   = false;
-  var sectionInView = false;
-  var hasStarted    = false;
-
-  function isSectionVisible() {
-    var rect = section.getBoundingClientRect();
-    return rect.top <= window.innerHeight * 0.98 && rect.bottom >= 0;
-  }
+  var textVisible = false;
+  var isPlaying = false;
+  var userInteracted = false;
 
   function setPlaying(playing) {
+    isPlaying = playing;
     if (controls) controls.classList.toggle('playing', playing);
   }
 
-  /*
-   * doPlay()
-   * --------
-   * Compatibilidad cross-browser y cross-device:
-   *
-   *  Chrome/Edge desktop  — muted=true garantiza play() sin gesto. Luego desmutamos.
-   *  Safari macOS         — igual que Chrome
-   *  iOS Safari           — requiere atributos HTML `muted` + `playsinline` + `autoplay`
-   *                         El scroll (touch) cuenta como interacción: desmute funciona.
-   *  Firefox              — idéntico a Chrome
-   *  Android Chrome       — touch scroll = interacción; desmute funciona.
-   *
-   *  El atributo `autoplay` en el HTML (junto con `muted`) indica al navegador
-   *  que el elemento está destinado a reproducirse automáticamente, lo que
-   *  relaja las restricciones para llamadas programáticas posteriores a play().
-   */
-  function doPlay() {
-    if (!video || !isSectionVisible()) return;
-    if (hasStarted && !video.paused) return;
+  function enableAudio() {
+    userInteracted = true;
+    video.muted = false;
+    video.volume = 1;
 
-    if (video.readyState < 2) {
-      video.load();
-      return;
-    }
-
-    var playPromise;
-    try {
-      playPromise = video.play();
-    } catch (e) {
-      return;
-    }
-
-    if (playPromise && playPromise.then) {
-      playPromise.then(function() {
-        video.muted = false;
-        setPlaying(true);
-        hasStarted = true;
-      }).catch(function() {
-        video.muted = true;
-        setPlaying(false);
-      });
-    } else {
-      video.muted = false;
-      setPlaying(true);
-      hasStarted = true;
+    if (video.paused) {
+      var rect = section.getBoundingClientRect();
+      var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
+      if (inView) {
+        video.play().then(function() {
+          setPlaying(true);
+        }).catch(function() {
+          setPlaying(false);
+        });
+      }
     }
   }
 
-  /*
-   * El atributo `autoplay` puede intentar reproducir el video al cargar la página,
-   * antes de que el usuario llegue a esta sección. Interceptamos el evento `play`
-   * y pausamos si la sección no está visible.
-   */
-  video.addEventListener('play', function() {
-    if (!sectionInView) {
+  function tryPlay() {
+    if (!video) return;
+
+    video.play().then(function() {
+      setPlaying(true);
+      if (userInteracted) {
+        video.muted = false;
+        video.volume = 1;
+      }
+    }).catch(function() {
+      setPlaying(false);
+    });
+  }
+
+  function updateVideo() {
+    var rect = section.getBoundingClientRect();
+    var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
+
+    if (inView && video.paused) {
+      video.muted = true;
+      tryPlay();
+    } else if (!inView && !video.paused) {
       video.pause();
       setPlaying(false);
-    } else {
-      setPlaying(true);
     }
+  }
+
+  video.addEventListener('play', function() {
+    setPlaying(true);
   });
+
   video.addEventListener('pause', function() {
     setPlaying(false);
   });
 
-  /* ── Botones de control ── */
-  if (btnPlay)  btnPlay.addEventListener('click',  function() { doPlay(); });
-  if (btnPause) btnPause.addEventListener('click', function() { video.pause(); });
+  video.addEventListener('click', enableAudio);
+  section.addEventListener('click', enableAudio);
+  document.addEventListener('click', enableAudio, { passive: true });
+  document.addEventListener('touchstart', enableAudio, { passive: true });
+
+  if (btnPlay) {
+    btnPlay.addEventListener('click', function() {
+      userInteracted = true;
+      video.muted = false;
+      video.volume = 1;
+      tryPlay();
+    });
+  }
+
+  if (btnPause) {
+    btnPause.addEventListener('click', function() {
+      video.pause();
+    });
+  }
 
   if (btnReplay) {
     btnReplay.addEventListener('click', function() {
       video.pause();
       video.currentTime = 0;
-      video.addEventListener('seeked', function onSeeked() {
-        video.removeEventListener('seeked', onSeeked);
-        if (isSectionVisible()) {
-          doPlay();
-        }
-      });
+      userInteracted = true;
+      video.muted = false;
+      video.volume = 1;
+      tryPlay();
     });
   }
 
-  var entryObs = new IntersectionObserver(function(entries) {
+  var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        sectionInView = true;
-        doPlay();
-      } else {
-        sectionInView = false;
-        if (!video.paused) {
-          video.pause();
-        }
+        updateVideo();
       }
     });
   }, {
-    threshold: 0.3,
-    rootMargin: '0px 0px -5% 0px'
+    threshold: 0.2,
+    rootMargin: '0px 0px -10% 0px'
   });
 
-  entryObs.observe(section);
+  observer.observe(section);
+  window.addEventListener('scroll', updateVideo, { passive: true });
+  window.addEventListener('load', updateVideo);
 
-  var onScrollCheck = function() {
-    if (isSectionVisible()) {
-      sectionInView = true;
-      doPlay();
-    } else if (sectionInView) {
-      sectionInView = false;
-      if (!video.paused) {
-        video.pause();
-      }
-    }
-  };
-
-  window.addEventListener('scroll', onScrollCheck, { passive: true });
-  window.addEventListener('load', onScrollCheck);
-
-  /* ── Paso 2: reveal bidireccional (texto aparece al 55 %, se oculta al 25 %) ── */
-  function onScroll() {
-    var rect     = section.getBoundingClientRect();
+  function onScrollReveal() {
+    var rect = section.getBoundingClientRect();
     var sectionH = section.offsetHeight;
-    var viewH    = window.innerHeight;
+    var viewH = window.innerHeight;
     var scrolled = -rect.top;
-    var total    = sectionH - viewH;
+    var total = sectionH - viewH;
     var progress = total > 0 ? scrolled / total : 0;
 
     if (progress >= 0.55 && !textVisible) {
@@ -354,5 +332,5 @@ function handleBook() {
     }
   }
 
-  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('scroll', onScrollReveal, { passive: true });
 })();
