@@ -212,7 +212,7 @@ a { text-decoration: none; color: inherit; }
 .qs-sub { font-size: 15px; font-weight: 300; color: var(--w60); line-height: 1.7; max-width: none; }
 
 /* Desktop: horizontal scroll */
-.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 var(--sp-x) 36px; cursor: grab; }
+.qs-track-w { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 8px var(--sp-x) 44px; cursor: grab; }
 .qs-track-w::-webkit-scrollbar { display: none; }
 .qs-track-w.grabbing { cursor: grabbing; }
 .qs-track { display: flex; gap: 16px; width: max-content; }
@@ -262,7 +262,7 @@ a { text-decoration: none; color: inherit; }
   align-items: flex-end;
   justify-content: space-between;
   gap: 32px;
-  margin-bottom: 10px;
+  margin-bottom: 22px;
 }
 
 .qs-sub-text {
