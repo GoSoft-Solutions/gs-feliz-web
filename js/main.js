@@ -246,7 +246,12 @@ function handleBook() {
     var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
 
     if (inView && video.paused) {
-      video.muted = true;
+      if (userInteracted) {
+        video.muted = false;
+        video.volume = 1;
+      } else {
+        video.muted = true;
+      }
       tryPlay();
     } else if (!inView && !video.paused) {
       video.pause();
@@ -289,22 +294,34 @@ function handleBook() {
   window.addEventListener('scroll', onUserGesture, { passive: true });
 
   if (btnPlay) {
-    btnPlay.addEventListener('click', function() {
+    btnPlay.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       userInteracted = true;
       video.muted = false;
       video.volume = 1;
-      tryPlay();
+      if (video.paused) {
+        tryPlay();
+      } else {
+        video.pause();
+        setPlaying(false);
+      }
     });
   }
 
   if (btnPause) {
-    btnPause.addEventListener('click', function() {
+    btnPause.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       video.pause();
+      setPlaying(false);
     });
   }
 
   if (btnReplay) {
-    btnReplay.addEventListener('click', function() {
+    btnReplay.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       video.pause();
       video.currentTime = 0;
       userInteracted = true;
