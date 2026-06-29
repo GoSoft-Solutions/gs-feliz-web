@@ -261,8 +261,8 @@ function handleBook() {
   video.addEventListener('pause', function() { setPlaying(false); });
 
   /* ── Botones de control ── */
-  if (btnPlay)  btnPlay.addEventListener('click',  function() { doPlay(); });
-  if (btnPause) btnPause.addEventListener('click', function() { video.pause(); });
+  if (btnPlay)  btnPlay.addEventListener('click',  function() { userPaused = false; doPlay(); });
+  if (btnPause) btnPause.addEventListener('click', function() { userPaused = true; video.pause(); });
 
   if (btnReplay) {
     btnReplay.addEventListener('click', function() {
@@ -271,6 +271,7 @@ function handleBook() {
        * Usamos `seeked` para garantizar que currentTime llegó a 0
        * antes de llamar play() — necesario en Safari donde seek es asíncrono.
        */
+      userPaused = false;
       video.pause();
       video.currentTime = 0;
       video.addEventListener('seeked', function onSeeked() {
@@ -281,19 +282,32 @@ function handleBook() {
   }
 
   /* ── Paso 1: arrancar / pausar según visibilidad de la sección ── */
+  /*
+   * Usamos threshold: 0.3 para que el video arranque cuando al menos
+   * el 30% de la sección sea visible (el usuario ya "entró" a la sección).
+   * Al salir (isIntersecting: false) se pausa automáticamente.
+   * Esto cubre tanto scroll hacia abajo (entra y sale) como hacia arriba.
+   */
+  var userPaused = false; /* respeta si el usuario pausó manualmente */
+
   var entryObs = new IntersectionObserver(function(entries) {
-    if (entries[0].isIntersecting) {
-      sectionInView = true;
-      doPlay();
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        if (overlay) overlay.classList.add('show');
-        if (content) content.classList.add('show');
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        sectionInView = true;
+        if (!userPaused) doPlay();
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          if (overlay) overlay.classList.add('show');
+          if (content) content.classList.add('show');
+        }
+      } else {
+        sectionInView = false;
+        video.pause();
+        /* Al salir de la sección reseteamos userPaused para que
+           al volver a entrar se reproduzca automáticamente */
+        userPaused = false;
       }
-    } else {
-      sectionInView = false;
-      video.pause();
-    }
-  }, { threshold: 0 });
+    });
+  }, { threshold: 0.3 });
 
   entryObs.observe(section);
 
@@ -319,4 +333,39 @@ function handleBook() {
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
+})();
+
+/* ── START PAGE FLOW ── */
+(function() {
+  var page = document.querySelector('.start-page');
+  if (!page) return;
+
+  var steps = Array.from(page.querySelectorAll('.start-step'));
+  var counter = page.querySelector('.start-step-counter');
+  var buttons = Array.from(page.querySelectorAll('.start-button-link'));
+
+  var progressFill = page.querySelector('.start-progress-fill');
+
+  function updateStep(index) {
+    steps.forEach(function(step, i) {
+      step.classList.toggle('active', i === index);
+    });
+    if (counter) counter.textContent = 'STEP ' + (index + 1) + ' OF ' + steps.length;
+    if (progressFill) {
+      progressFill.style.width = Math.round(((index + 1) / steps.length) * 100) + '%';
+    }
+  }
+
+  buttons.forEach(function(button) {
+    var target = button.getAttribute('data-target');
+    if (!target) return;
+    button.addEventListener('click', function() {
+      var next = parseInt(target, 10);
+      if (!Number.isNaN(next) && next >= 0 && next < steps.length) {
+        updateStep(next);
+      }
+    });
+  });
+
+  updateStep(0);
 })();
