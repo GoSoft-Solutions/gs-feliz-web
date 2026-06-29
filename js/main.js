@@ -192,166 +192,132 @@ function handleBook() {
 
 /* ── S3 QUÉ ES FELIZ: sticky video intro + controles + reveal bidireccional ── */
 (function() {
-  var section = document.getElementById('que-es');
+  var section  = document.getElementById('que-es');
   if (!section) return;
 
-  var video = document.getElementById('qeVideo');
-  var overlay = document.getElementById('qeOv');
-  var content = document.getElementById('qeCt');
+  var video    = document.getElementById('qeVideo');
+  var overlay  = document.getElementById('qeOv');
+  var content  = document.getElementById('qeCt');
   var controls = document.getElementById('qeControls');
-  var btnPlay = document.getElementById('qeBtnPlay');
+  var btnPlay  = document.getElementById('qeBtnPlay');
   var btnPause = document.getElementById('qeBtnPause');
-  var btnReplay = document.getElementById('qeBtnReplay');
+  var btnReplay= document.getElementById('qeBtnReplay');
   if (!video) return;
 
-  var textVisible = false;
-  var isPlaying = false;
-  var userInteracted = false;
+  var textVisible   = false;
+  var sectionInView = false;
 
+  /* ── Estado visual play / pause ── */
   function setPlaying(playing) {
-    isPlaying = playing;
     if (controls) controls.classList.toggle('playing', playing);
   }
 
-  function tryPlay() {
-    if (!video) return;
-
-    video.play().then(function() {
-      setPlaying(true);
-      if (userInteracted) {
-        video.muted = false;
-        video.volume = 1;
-      }
-    }).catch(function() {
-      setPlaying(false);
-    });
-  }
-
-  function enableAudio() {
-    userInteracted = true;
-    video.muted = false;
-    video.volume = 1;
-
-    if (video.paused) {
-      var rect = section.getBoundingClientRect();
-      var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
-      if (inView) {
-        tryPlay();
-      }
-    }
-  }
-
-  function updateVideo() {
-    var rect = section.getBoundingClientRect();
-    var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
-
-    if (inView && video.paused) {
-      if (userInteracted) {
-        video.muted = false;
-        video.volume = 1;
-      } else {
-        video.muted = true;
-      }
-      tryPlay();
-    } else if (!inView && !video.paused) {
-      video.pause();
-      setPlaying(false);
-    }
-  }
-
-  video.addEventListener('play', function() {
-    setPlaying(true);
-  });
-
-  video.addEventListener('pause', function() {
-    setPlaying(false);
-  });
-
-  function onUserGesture() {
-    if (!userInteracted) {
-      userInteracted = true;
-      if (video.paused) {
-        var rect = section.getBoundingClientRect();
-        var inView = rect.top <= window.innerHeight * 0.9 && rect.bottom >= 0;
-        if (inView) {
-          video.muted = false;
-          video.volume = 1;
-          tryPlay();
-        }
-      } else {
-        video.muted = false;
-        video.volume = 1;
-      }
-    }
-  }
-
-  video.addEventListener('click', enableAudio);
-  section.addEventListener('click', enableAudio);
-  document.addEventListener('click', enableAudio, { passive: true });
-  document.addEventListener('touchstart', enableAudio, { passive: true });
-  window.addEventListener('wheel', onUserGesture, { passive: true });
-  window.addEventListener('touchmove', onUserGesture, { passive: true });
-  window.addEventListener('scroll', onUserGesture, { passive: true });
-
-  if (btnPlay) {
-    btnPlay.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      userInteracted = true;
+  /*
+   * doPlay()
+   * --------
+   * Compatibilidad cross-browser y cross-device:
+   *
+   *  Chrome/Edge desktop  — muted=true garantiza play() sin gesto. Luego desmutamos.
+   *  Safari macOS         — igual que Chrome
+   *  iOS Safari           — requiere atributos HTML `muted` + `playsinline` + `autoplay`
+   *                         El scroll (touch) cuenta como interacción: desmute funciona.
+   *  Firefox              — idéntico a Chrome
+   *  Android Chrome       — touch scroll = interacción; desmute funciona.
+   *
+   *  El atributo `autoplay` en el HTML (junto con `muted`) indica al navegador
+   *  que el elemento está destinado a reproducirse automáticamente, lo que
+   *  relaja las restricciones para llamadas programáticas posteriores a play().
+   */
+  function doPlay() {
+    video.muted = true;            /* garantiza autoplay en todos los navegadores */
+    var p = video.play();
+    if (p === undefined) {         /* API síncrona — navegadores muy antiguos */
       video.muted = false;
-      video.volume = 1;
-      if (video.paused) {
-        tryPlay();
-      } else {
-        video.pause();
-        setPlaying(false);
-      }
-    });
-  }
-
-  if (btnPause) {
-    btnPause.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      video.pause();
+      setPlaying(true);
+      return;
+    }
+    p.then(function() {
+      video.muted = false;         /* activa audio en cuanto el video corre */
+      setPlaying(true);
+    }).catch(function() {
+      /* Política del navegador bloquea incluso muted — el botón Play queda visible */
       setPlaying(false);
     });
   }
+
+  /*
+   * El atributo `autoplay` puede intentar reproducir el video al cargar la página,
+   * antes de que el usuario llegue a esta sección. Interceptamos el evento `play`
+   * y pausamos si la sección no está visible.
+   */
+  video.addEventListener('play', function() {
+    if (!sectionInView) {
+      video.pause();
+      setPlaying(false);
+    } else {
+      setPlaying(true);
+    }
+  });
+  video.addEventListener('pause', function() { setPlaying(false); });
+
+  /* ── Botones de control ── */
+  if (btnPlay)  btnPlay.addEventListener('click',  function() { userPaused = false; doPlay(); });
+  if (btnPause) btnPause.addEventListener('click', function() { userPaused = true; video.pause(); });
 
   if (btnReplay) {
-    btnReplay.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+    btnReplay.addEventListener('click', function() {
+      /*
+       * Replay: regresa al inicio y arranca automáticamente.
+       * Usamos `seeked` para garantizar que currentTime llegó a 0
+       * antes de llamar play() — necesario en Safari donde seek es asíncrono.
+       */
+      userPaused = false;
       video.pause();
       video.currentTime = 0;
-      userInteracted = true;
-      video.muted = false;
-      video.volume = 1;
-      tryPlay();
+      video.addEventListener('seeked', function onSeeked() {
+        video.removeEventListener('seeked', onSeeked);
+        doPlay();
+      });
     });
   }
 
-  var observer = new IntersectionObserver(function(entries) {
+  /* ── Paso 1: arrancar / pausar según visibilidad de la sección ── */
+  /*
+   * Usamos threshold: 0.3 para que el video arranque cuando al menos
+   * el 30% de la sección sea visible (el usuario ya "entró" a la sección).
+   * Al salir (isIntersecting: false) se pausa automáticamente.
+   * Esto cubre tanto scroll hacia abajo (entra y sale) como hacia arriba.
+   */
+  var userPaused = false; /* respeta si el usuario pausó manualmente */
+
+  var entryObs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        updateVideo();
+        sectionInView = true;
+        if (!userPaused) doPlay();
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          if (overlay) overlay.classList.add('show');
+          if (content) content.classList.add('show');
+        }
+      } else {
+        sectionInView = false;
+        video.pause();
+        /* Al salir de la sección reseteamos userPaused para que
+           al volver a entrar se reproduzca automáticamente */
+        userPaused = false;
       }
     });
-  }, {
-    threshold: 0.2,
-    rootMargin: '0px 0px -10% 0px'
-  });
+  }, { threshold: 0.3 });
 
-  observer.observe(section);
-  window.addEventListener('scroll', updateVideo, { passive: true });
-  window.addEventListener('load', updateVideo);
+  entryObs.observe(section);
 
-  function onScrollReveal() {
-    var rect = section.getBoundingClientRect();
+  /* ── Paso 2: reveal bidireccional (texto aparece al 55 %, se oculta al 25 %) ── */
+  function onScroll() {
+    var rect     = section.getBoundingClientRect();
     var sectionH = section.offsetHeight;
-    var viewH = window.innerHeight;
+    var viewH    = window.innerHeight;
     var scrolled = -rect.top;
-    var total = sectionH - viewH;
+    var total    = sectionH - viewH;
     var progress = total > 0 ? scrolled / total : 0;
 
     if (progress >= 0.55 && !textVisible) {
@@ -366,5 +332,40 @@ function handleBook() {
     }
   }
 
-  window.addEventListener('scroll', onScrollReveal, { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+
+/* ── START PAGE FLOW ── */
+(function() {
+  var page = document.querySelector('.start-page');
+  if (!page) return;
+
+  var steps = Array.from(page.querySelectorAll('.start-step'));
+  var counter = page.querySelector('.start-step-counter');
+  var buttons = Array.from(page.querySelectorAll('.start-button-link'));
+
+  var progressFill = page.querySelector('.start-progress-fill');
+
+  function updateStep(index) {
+    steps.forEach(function(step, i) {
+      step.classList.toggle('active', i === index);
+    });
+    if (counter) counter.textContent = 'STEP ' + (index + 1) + ' OF ' + steps.length;
+    if (progressFill) {
+      progressFill.style.width = Math.round(((index + 1) / steps.length) * 100) + '%';
+    }
+  }
+
+  buttons.forEach(function(button) {
+    var target = button.getAttribute('data-target');
+    if (!target) return;
+    button.addEventListener('click', function() {
+      var next = parseInt(target, 10);
+      if (!Number.isNaN(next) && next >= 0 && next < steps.length) {
+        updateStep(next);
+      }
+    });
+  });
+
+  updateStep(0);
 })();
