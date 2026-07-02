@@ -20,7 +20,7 @@
     <li><a href="#servicios">Servicios</a></li>
     <li><a href="#pilares">Pilares</a></li>
   </ul>
-  <a class="nav-cta" href="/start">Comienza ahora</a>
+  <a class="nav-cta" href="#" onclick="return false;">Comienza ahora</a>
   <button class="nav-hamburger" id="hb" aria-label="Abrir menú" onclick="toggleMenu()">
     <span class="hl"></span><span class="hl"></span><span class="hl"></span>
   </button>
@@ -40,7 +40,7 @@
     <div class="hero-c">
       <h1 class="hero-headline">No vine a enseñarte a ser perfecto. Vine a ayudarte a convertirte en tu mejor versión.</h1>
       <div class="hero-acts">
-        <a class="btn-hero" href="/start">Comienza tu transformación</a>
+        <a class="btn-hero" href="#" onclick="return false;">Comienza tu transformación</a>
       </div>
     </div>
   </div>
@@ -155,9 +155,21 @@
 <section class="qe" id="que-es">
   <div class="qe-sticky">
 
-    <video class="qe-video" id="qeVideo" playsinline loop preload="auto">
+    <video class="qe-video" id="qeVideo" muted playsinline loop preload="auto">
       <source src="img/feliz-web.mp4" type="video/mp4">
     </video>
+
+    <!-- Overlay: activar audio -->
+    <div class="qe-audio-prompt" id="qeAudioPrompt">
+      <button class="qe-audio-btn" id="qeAudioBtn" aria-label="Activar audio">
+        <svg class="qe-audio-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/>
+          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" fill="currentColor"/>
+          <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>
+        </svg>
+        <span class="qe-audio-label">Activar audio</span>
+      </button>
+    </div>
 
     <!-- Controles personalizados -->
     <div class="qe-controls" id="qeControls">
@@ -181,47 +193,77 @@
     <div class="qe-ov" id="qeOv"></div>
     <div class="qe-ct" id="qeCt">
       <h2 class="qe-title">Feliz es un espacio para personas que quieren dejar de <span class="qe-accent">sobrevivir</span> y empezar a vivir con intención</h2>
-      <div style="margin-top:28px;"><a class="btn-p" href="/start">Empieza ahora <span class="bi">→</span></a></div>
+      <div style="margin-top:28px;"><a class="btn-p" href="#" onclick="return false;">Empieza ahora <span class="bi">→</span></a></div>
     </div>
 
   </div>
 </section>
 
-<!-- S4 SERVICIOS — comentado temporalmente, pendiente de trabajar
+<!-- S4 SERVICIOS -->
 <section class="srv" id="servicios">
-  <div class="srv-left">
-    <div class="srv-lb rv">1:1 con Daniel</div>
-    <div class="rv-clip" style="margin-bottom:8px;"><h2 class="srv-t rv-inner">SESIONES PRIVADAS</h2></div>
-    <p class="srv-sub rv">Sesiones donde defines tu dirección, ganas claridad y trabajas en lo que importa.</p>
-    <div class="srv-list rv">
-      <div class="srv-item"><span class="srv-n">VIDEOLLAMADA</span><span class="srv-det">Incluido</span><span class="srv-arr">→</span></div>
-      <div class="srv-item"><span class="srv-n">50 / 80 MIN</span><span class="srv-det">Duración</span><span class="srv-arr">→</span></div>
-      <div class="srv-item"><span class="srv-n">PERSONALIZADO</span><span class="srv-det">Enfoque</span><span class="srv-arr">→</span></div>
-      <div class="srv-item"><span class="srv-n">RECURSOS</span><span class="srv-det">Incluido</span><span class="srv-arr">→</span></div>
-    </div>
-    <div class="rv h" style="margin-top:32px;"><button class="btn-dark" onclick="goTo('#agenda')">Agenda tu sesión <span class="bi" style="background:rgba(240,237,230,0.1);">→</span></button></div>
-  </div>
-  <div class="srv-right rv">
-    <div class="srv-img-w"><div class="ph"><div class="ph-r"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span class="ph-l">Foto de Daniel</span></div></div>
-  </div>
-</section>
--->
 
-<!-- S6 PILARES — comentado temporalmente, pendiente de trabajar
-<section class="pil" id="pilares">
-  <div class="rv-clip"><h2 class="pil-t rv-inner">SI ESTÁS LISTO PARA CONOCERTE, CRECER, SANAR Y CONSTRUIR UNA VIDA REAL. BIENVENIDO.</h2></div>
-  <div class="pil-body">
-    <div class="rv h"><div class="pil-img-w"><div class="ph"><div class="ph-r"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span class="ph-l">Foto de Daniel</span></div></div></div>
-    <div class="pil-right">
-      <p class="pil-intro rv">Cada pilar es un área de tu vida donde puedes crecer. No todo al mismo tiempo. Con intención, uno a la vez.</p>
-      <div class="pil-item rv" style="transition-delay:40ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Relaciones</div><div class="pil-ds">Aprende a amar mejor. Las relaciones son el espejo más claro de quién eres.</div></div></div>
-      <div class="pil-item rv" style="transition-delay:80ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Mindset</div><div class="pil-ds">Entrena tu mente como entrenas tu cuerpo. La disciplina mental es el diferenciador.</div></div></div>
-      <div class="pil-item rv" style="transition-delay:120ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Finanzas</div><div class="pil-ds">Construye tu libertad. La abundancia empieza con las creencias que tienes sobre el dinero.</div></div></div>
-      <div class="pil-item rv" style="transition-delay:160ms"><div class="pil-mk"><div class="pil-dot"></div></div><div><div class="pil-nm">Identidad</div><div class="pil-ds">Conoce quién eres realmente. Todo lo demás viene después de eso.</div></div></div>
+  <!-- Fase 1: título hero centrado -->
+  <div class="srv-hero" id="srvHero">
+    <div class="srv-hero-inner">
+      <h2 class="srv-hero-t" id="srvHeroT">SESIONES<br>PRIVADAS</h2>
+      <span class="srv-hero-label">1:1 con Daniel Corral</span>
     </div>
   </div>
+
+  <!-- Fase 2+3: layout final sticky -->
+  <div class="srv-inner" id="srvInner">
+    <div class="srv-left" id="srvImgPanel">
+      <div class="srv-img-w"><img src="img/sesiones-privadas.jpg" alt="Sesiones privadas con Daniel Corral"></div>
+    </div>
+    <div class="srv-right">
+      <div class="srv-lb srv-reveal">1:1 con Daniel</div>
+      <h2 class="srv-t srv-reveal" id="srvLayoutT">SESIONES PRIVADAS</h2>
+      <p class="srv-sub srv-reveal">Sesiones donde defines tu dirección, ganas claridad y trabajas en lo que importa.</p>
+      <div class="srv-list">
+        <div class="srv-item srv-reveal"><span class="srv-n">VIDEOLLAMADA</span></div>
+        <div class="srv-item srv-reveal"><span class="srv-n">50 / 80 MIN</span></div>
+        <div class="srv-item srv-reveal"><span class="srv-n">PLAN PERSONALIZADO</span></div>
+        <div class="srv-item srv-reveal"><span class="srv-n">RECURSOS DE CRECIMIENTO</span></div>
+      </div>
+      <div class="srv-reveal" style="margin-top:32px;"><button class="btn-dark" onclick="return false;">Agenda tu sesión <span class="bi" style="background:rgba(240,237,230,0.1);">→</span></button></div>
+    </div>
+  </div>
+
 </section>
--->
+
+<!-- S6 PILARES -->
+<section class="pil" id="pilares">
+
+  <!-- Fase 1: título hero centrado -->
+  <div class="pil-hero" id="pilHero">
+    <div class="pil-hero-inner">
+      <h2 class="pil-hero-t" id="pilHeroT">PILARES</h2>
+      <span class="pil-hero-label">Para una vida extraordinaria</span>
+    </div>
+  </div>
+
+  <!-- Fase 2: layout final -->
+  <div class="pil-inner" id="pilInner">
+    <div class="pil-left">
+      <div class="pil-label pil-reveal">● Pilares para una vida extraordinaria</div>
+      <div class="pil-headlines">
+        <div class="pil-hl pil-reveal" data-pilar="0"><span class="pil-hl-text">Relaciones</span></div>
+        <div class="pil-hl pil-reveal" data-pilar="1"><span class="pil-hl-text">Mindset</span></div>
+        <div class="pil-hl pil-reveal" data-pilar="2"><span class="pil-hl-text">Finanzas</span></div>
+        <div class="pil-hl pil-reveal" data-pilar="3"><span class="pil-hl-text">Identidad</span></div>
+      </div>
+    </div>
+    <div class="pil-right pil-reveal">
+      <div class="pil-img-stack" id="pilImgStack">
+        <img class="pil-img active" src="img/pilar-relaciones.jpg" alt="Relaciones">
+        <img class="pil-img" src="img/pilar-mindset.jpg" alt="Mindset">
+        <img class="pil-img" src="img/pilar-finanzas.jpg" alt="Finanzas">
+        <img class="pil-img" src="img/pilar-identidad.jpg" alt="Identidad">
+      </div>
+    </div>
+  </div>
+
+</section>
 
 <!-- S7 FINAL -->
 <section class="final" id="final">
@@ -232,7 +274,7 @@
   <div class="final-ct">
     <div class="rv-clip" style="margin-bottom:28px;"><h2 class="final-t rv-inner">No sé en qué momento de tu vida estás</h2></div>
     <p class="final-sub rv">Pero si llegaste aquí, quizás ya es momento de comenzar<br>a convertirte en la persona que sabes que puedes ser.</p>
-    <div class="rv h" style="margin-top:28px;"><a class="btn-p" href="/start">Dar el paso <span class="bi">→</span></a></div>
+    <div class="rv h" style="margin-top:28px;"><a class="btn-p" href="#" onclick="return false;">Dar el paso <span class="bi">→</span></a></div>
   </div>
 </section>
 

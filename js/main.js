@@ -8,14 +8,21 @@ function goTo(sel) {
 (function() {
   var nav = document.getElementById('nav');
   var srvEl = document.getElementById('servicios');
+  var pilEl = document.getElementById('pilares');
 
   function check() {
     var sy = window.scrollY;
     nav.classList.toggle('scrolled', sy > 50);
+    var onLight = false;
     if (srvEl) {
       var r = srvEl.getBoundingClientRect();
-      nav.classList.toggle('on-light', r.top < 60 && r.bottom > 60);
+      if (r.top < 60 && r.bottom > 60) onLight = true;
     }
+    if (pilEl) {
+      var p = pilEl.getBoundingClientRect();
+      if (p.top < 60 && p.bottom > 60) onLight = true;
+    }
+    nav.classList.toggle('on-light', onLight);
   }
   window.addEventListener('scroll', check, { passive: true });
   check();
@@ -202,10 +209,14 @@ function handleBook() {
   var btnPlay  = document.getElementById('qeBtnPlay');
   var btnPause = document.getElementById('qeBtnPause');
   var btnReplay= document.getElementById('qeBtnReplay');
+  var audioPrompt = document.getElementById('qeAudioPrompt');
+  var audioBtn    = document.getElementById('qeAudioBtn');
   if (!video) return;
 
-  var textVisible   = false;
-  var sectionInView = false;
+  var textVisible    = false;
+  var sectionInView  = false;
+  var userPaused     = false;
+  var audioActivated = false; /* true una vez que el usuario activa el audio */
 
   /* ── Estado visual play / pause ── */
   function setPlaying(playing) {
@@ -215,40 +226,28 @@ function handleBook() {
   /*
    * doPlay()
    * --------
-   * Compatibilidad cross-browser y cross-device:
-   *
-   *  Chrome/Edge desktop  — muted=true garantiza play() sin gesto. Luego desmutamos.
-   *  Safari macOS         — igual que Chrome
-   *  iOS Safari           — requiere atributos HTML `muted` + `playsinline` + `autoplay`
-   *                         El scroll (touch) cuenta como interacción: desmute funciona.
-   *  Firefox              — idéntico a Chrome
-   *  Android Chrome       — touch scroll = interacción; desmute funciona.
-   *
-   *  El atributo `autoplay` en el HTML (junto con `muted`) indica al navegador
-   *  que el elemento está destinado a reproducirse automáticamente, lo que
-   *  relaja las restricciones para llamadas programáticas posteriores a play().
+   * Siempre arranca muted para garantizar autoplay.
+   * Si el usuario ya activó el audio, desmutea después del play.
    */
   function doPlay() {
-    video.muted = true;            /* garantiza autoplay en todos los navegadores */
+    video.muted = true;
     var p = video.play();
-    if (p === undefined) {         /* API síncrona — navegadores muy antiguos */
-      video.muted = false;
+    if (p === undefined) {
+      if (audioActivated) video.muted = false;
       setPlaying(true);
       return;
     }
     p.then(function() {
-      video.muted = false;         /* activa audio en cuanto el video corre */
+      if (audioActivated) video.muted = false;
       setPlaying(true);
     }).catch(function() {
-      /* Política del navegador bloquea incluso muted — el botón Play queda visible */
       setPlaying(false);
     });
   }
 
   /*
-   * El atributo `autoplay` puede intentar reproducir el video al cargar la página,
-   * antes de que el usuario llegue a esta sección. Interceptamos el evento `play`
-   * y pausamos si la sección no está visible.
+   * Interceptar autoplay del navegador: si la sección no está visible,
+   * no permitir que se reproduzca.
    */
   video.addEventListener('play', function() {
     if (!sectionInView) {
@@ -260,17 +259,48 @@ function handleBook() {
   });
   video.addEventListener('pause', function() { setPlaying(false); });
 
+  /* ── Audio activation overlay ── */
+  /*
+   * Cuando la sección entra en viewport y el audio no ha sido activado,
+   * mostramos el overlay con la animación de "Activar audio".
+   * El video ya corre muted debajo.
+   * Al hacer click, se desmutea y se oculta el overlay.
+   */
+  function showAudioPrompt() {
+    if (audioPrompt && !audioActivated) {
+      audioPrompt.classList.add('show');
+      audioPrompt.classList.remove('hide');
+    }
+  }
+
+  function hideAudioPrompt() {
+    if (audioPrompt) {
+      audioPrompt.classList.add('hide');
+      audioPrompt.classList.remove('show');
+    }
+  }
+
+  if (audioBtn) {
+    audioBtn.addEventListener('click', function() {
+      audioActivated = true;
+      video.muted = false;
+      hideAudioPrompt();
+    });
+  }
+
   /* ── Botones de control ── */
-  if (btnPlay)  btnPlay.addEventListener('click',  function() { userPaused = false; doPlay(); });
-  if (btnPause) btnPause.addEventListener('click', function() { userPaused = true; video.pause(); });
+  if (btnPlay) btnPlay.addEventListener('click', function() {
+    userPaused = false;
+    doPlay();
+  });
+
+  if (btnPause) btnPause.addEventListener('click', function() {
+    userPaused = true;
+    video.pause();
+  });
 
   if (btnReplay) {
     btnReplay.addEventListener('click', function() {
-      /*
-       * Replay: regresa al inicio y arranca automáticamente.
-       * Usamos `seeked` para garantizar que currentTime llegó a 0
-       * antes de llamar play() — necesario en Safari donde seek es asíncrono.
-       */
       userPaused = false;
       video.pause();
       video.currentTime = 0;
@@ -281,20 +311,26 @@ function handleBook() {
     });
   }
 
-  /* ── Paso 1: arrancar / pausar según visibilidad de la sección ── */
+  /* ── Visibilidad de la sección: arrancar / pausar con IntersectionObserver ── */
   /*
-   * Usamos threshold: 0.3 para que el video arranque cuando al menos
-   * el 30% de la sección sea visible (el usuario ya "entró" a la sección).
-   * Al salir (isIntersecting: false) se pausa automáticamente.
-   * Esto cubre tanto scroll hacia abajo (entra y sale) como hacia arriba.
+   * Comportamiento:
+   *  - Scroll hacia abajo → entra a la sección → video empieza muted + overlay de audio
+   *  - Usuario activa audio → se desmutea, overlay desaparece
+   *  - Sigue scroll y sale → video se pausa
+   *  - Regresa a la sección → video retoma (con audio si ya fue activado)
+   *  - Video tiene loop → nunca se detiene solo, siempre por pausa manual o salir de sección
    */
-  var userPaused = false; /* respeta si el usuario pausó manualmente */
-
   var entryObs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         sectionInView = true;
-        if (!userPaused) doPlay();
+        if (!userPaused) {
+          doPlay();
+          /* Mostrar prompt de audio con un breve delay para la animación */
+          if (!audioActivated) {
+            setTimeout(showAudioPrompt, 400);
+          }
+        }
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
           if (overlay) overlay.classList.add('show');
           if (content) content.classList.add('show');
@@ -302,16 +338,14 @@ function handleBook() {
       } else {
         sectionInView = false;
         video.pause();
-        /* Al salir de la sección reseteamos userPaused para que
-           al volver a entrar se reproduzca automáticamente */
-        userPaused = false;
+        hideAudioPrompt();
       }
     });
   }, { threshold: 0.3 });
 
   entryObs.observe(section);
 
-  /* ── Paso 2: reveal bidireccional (texto aparece al 55 %, se oculta al 25 %) ── */
+  /* ── Reveal bidireccional (texto aparece al 55%, se oculta al 25%) ── */
   function onScroll() {
     var rect     = section.getBoundingClientRect();
     var sectionH = section.offsetHeight;
@@ -333,6 +367,165 @@ function handleBook() {
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
+})();
+
+/* ── S4 SERVICIOS: 3-phase scroll (hero title → layout) ── */
+(function() {
+  var section   = document.getElementById('servicios');
+  if (!section) return;
+
+  var heroEl    = document.getElementById('srvHero');
+  var heroT     = document.getElementById('srvHeroT');
+  var innerEl   = document.getElementById('srvInner');
+  var imgPanel  = section.querySelector('.srv-left');
+  var reveals   = section.querySelectorAll('.srv-reveal');
+
+  var phase = 0;
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function showLayout() {
+    if (heroEl) heroEl.classList.add('hidden');
+    if (innerEl) innerEl.classList.add('visible');
+    if (imgPanel) imgPanel.classList.add('visible');
+    reveals.forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('visible'); }, i * 70);
+    });
+  }
+
+  function resetLayout() {
+    if (heroEl) heroEl.classList.remove('hidden');
+    if (heroT) { heroT.style.transform = ''; heroT.style.opacity = ''; }
+    if (innerEl) innerEl.classList.remove('visible');
+    if (imgPanel) imgPanel.classList.remove('visible');
+    reveals.forEach(function(el) { el.classList.remove('visible'); });
+  }
+
+  function onScroll() {
+    var rect     = section.getBoundingClientRect();
+    var sectionH = section.offsetHeight;
+    var viewH    = window.innerHeight;
+    var scrolled = -rect.top;
+    var total    = sectionH - viewH;
+    var progress = total > 0 ? Math.max(0, Math.min(1, scrolled / total)) : 0;
+
+    /*
+     * Fase 0 (0–30%): título hero centrado, con ligero zoom-out al final
+     * Fase 1 (30–100%): layout completo, todo visible de golpe
+     */
+    if (progress < 0.30) {
+      if (phase !== 0) { phase = 0; resetLayout(); }
+      /* zoom-out suave hacia el final de la fase hero */
+      var p = progress / 0.30;
+      var scale   = 1 - easeInOut(p) * 0.10;
+      var opacity = p > 0.65 ? 1 - (p - 0.65) / 0.35 : 1;
+      if (heroT) {
+        heroT.style.transform = 'scale(' + scale + ')';
+        heroT.style.opacity   = opacity;
+      }
+    } else {
+      if (phase !== 1) { phase = 1; showLayout(); }
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+/* ── S6 PILARES: hero phase + scroll-driven activation + click to seek ── */
+(function() {
+  var section    = document.getElementById('pilares');
+  if (!section) return;
+
+  var heroEl     = document.getElementById('pilHero');
+  var heroT      = document.getElementById('pilHeroT');
+  var innerEl    = document.getElementById('pilInner');
+  var headlines  = section.querySelectorAll('.pil-hl');
+  var images     = section.querySelectorAll('.pil-img');
+  var imgPanel   = section.querySelector('.pil-right');
+  var reveals    = section.querySelectorAll('.pil-reveal');
+
+  var phase = 0;
+  var numPilars = headlines.length;
+  var heroEnd = 0.15;
+  var layoutEnd = 0.95;
+
+  function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function setActive(idx) {
+    headlines.forEach(function(h, i) { h.classList.toggle('active', i === idx); });
+    images.forEach(function(img, i) { img.classList.toggle('active', i === idx); });
+  }
+
+  function showLayout() {
+    if (heroEl) heroEl.classList.add('hidden');
+    if (innerEl) innerEl.classList.add('visible');
+    if (imgPanel) imgPanel.classList.add('visible');
+    reveals.forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('visible'); }, i * 70);
+    });
+  }
+
+  function resetLayout() {
+    if (heroEl) heroEl.classList.remove('hidden');
+    if (heroT) { heroT.style.transform = ''; heroT.style.opacity = ''; }
+    if (innerEl) innerEl.classList.remove('visible');
+    if (imgPanel) imgPanel.classList.remove('visible');
+    reveals.forEach(function(el) { el.classList.remove('visible'); });
+    setActive(0);
+  }
+
+  function onScroll() {
+    if (isSeeking) return; /* no interrumpir durante scroll programático */
+
+    var rect     = section.getBoundingClientRect();
+    var sectionH = section.offsetHeight;
+    var viewH    = window.innerHeight;
+    var scrolled = -rect.top;
+    var total    = sectionH - viewH;
+    var progress = total > 0 ? Math.max(0, Math.min(1, scrolled / total)) : 0;
+
+    if (progress < heroEnd) {
+      if (phase !== 0) { phase = 0; resetLayout(); }
+      var p = progress / heroEnd;
+      var scale   = 1 - easeInOut(p) * 0.10;
+      var opacity = p > 0.65 ? 1 - (p - 0.65) / 0.35 : 1;
+      if (heroT) { heroT.style.transform = 'scale(' + scale + ')'; heroT.style.opacity = opacity; }
+    } else {
+      if (phase !== 1) { phase = 1; showLayout(); }
+      var layoutProgress = (progress - heroEnd) / (layoutEnd - heroEnd);
+      layoutProgress = Math.max(0, Math.min(1, layoutProgress));
+      var activeIdx = Math.min(numPilars - 1, Math.floor(layoutProgress * numPilars));
+      setActive(activeIdx);
+    }
+  }
+
+  /* ── Click to seek: activa el pilar visualmente sin mover el scroll ── */
+  var isSeeking = false;
+  var seekTargetIdx = 0;
+
+  headlines.forEach(function(hl) {
+    hl.addEventListener('click', function() {
+      var idx = parseInt(hl.getAttribute('data-pilar'), 10);
+      if (isNaN(idx)) return;
+
+      /* Asegurar que el layout esté visible */
+      if (phase !== 1) { phase = 1; showLayout(); }
+
+      /* Activar el pilar inmediatamente */
+      seekTargetIdx = idx;
+      setActive(idx);
+
+      /* Bloquear onScroll brevemente para que no sobreescriba el estado */
+      isSeeking = true;
+      setTimeout(function() { isSeeking = false; }, 50);
+    });
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 })();
 
 /* ── START PAGE FLOW ── */
