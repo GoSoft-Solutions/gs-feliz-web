@@ -345,31 +345,11 @@ function handleBook() {
 
   entryObs.observe(section);
 
-  /* ── Reveal bidireccional (texto aparece al 55%, se oculta al 25%) ── */
-  function onScroll() {
-    var rect     = section.getBoundingClientRect();
-    var sectionH = section.offsetHeight;
-    var viewH    = window.innerHeight;
-    var scrolled = -rect.top;
-    var total    = sectionH - viewH;
-    var progress = total > 0 ? scrolled / total : 0;
-
-    if (progress >= 0.55 && !textVisible) {
-      textVisible = true;
-      if (overlay) overlay.classList.add('show');
-      if (content) content.classList.add('show');
-    }
-    if (progress < 0.25 && textVisible) {
-      textVisible = false;
-      if (overlay) overlay.classList.remove('show');
-      if (content) content.classList.remove('show');
-    }
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
+  /* ── Reveal bidireccional disabled: text always visible ── */
+  /* Text and overlay are always visible via CSS */
 })();
 
-/* ── S4 SERVICIOS: 3-phase scroll (hero title → layout) ── */
+/* ── S4 SERVICIOS: 3-phase scroll (hero title → layout → panel switch) ── */
 (function() {
   var section   = document.getElementById('servicios');
   if (!section) return;
@@ -379,11 +359,21 @@ function handleBook() {
   var innerEl   = document.getElementById('srvInner');
   var imgPanel  = section.querySelector('.srv-left');
   var reveals   = section.querySelectorAll('.srv-reveal');
+  var panel1    = document.getElementById('srvPanel1');
+  var panel2    = document.getElementById('srvPanel2');
 
   var phase = 0;
+  var activePanel = 1;
 
   function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function setPanel(num) {
+    if (num === activePanel) return;
+    activePanel = num;
+    if (panel1) panel1.classList.toggle('active', num === 1);
+    if (panel2) panel2.classList.toggle('active', num === 2);
   }
 
   function showLayout() {
@@ -401,6 +391,7 @@ function handleBook() {
     if (innerEl) innerEl.classList.remove('visible');
     if (imgPanel) imgPanel.classList.remove('visible');
     reveals.forEach(function(el) { el.classList.remove('visible'); });
+    setPanel(1);
   }
 
   function onScroll() {
@@ -412,13 +403,13 @@ function handleBook() {
     var progress = total > 0 ? Math.max(0, Math.min(1, scrolled / total)) : 0;
 
     /*
-     * Fase 0 (0–30%): título hero centrado, con ligero zoom-out al final
-     * Fase 1 (30–100%): layout completo, todo visible de golpe
+     * Fase 0 (0–20%): título hero centrado, con ligero zoom-out al final
+     * Fase 1 (20–55%): layout con panel 1 (VIDEOLLAMADA, EVALUACIÓN, MAPA)
+     * Fase 2 (55–100%): layout con panel 2 (PLAN DE ACCIÓN, SEGUIMIENTO, botón)
      */
-    if (progress < 0.30) {
+    if (progress < 0.20) {
       if (phase !== 0) { phase = 0; resetLayout(); }
-      /* zoom-out suave hacia el final de la fase hero */
-      var p = progress / 0.30;
+      var p = progress / 0.20;
       var scale   = 1 - easeInOut(p) * 0.10;
       var opacity = p > 0.65 ? 1 - (p - 0.65) / 0.35 : 1;
       if (heroT) {
@@ -427,6 +418,12 @@ function handleBook() {
       }
     } else {
       if (phase !== 1) { phase = 1; showLayout(); }
+      /* Switch panels at 55% */
+      if (progress < 0.55) {
+        setPanel(1);
+      } else {
+        setPanel(2);
+      }
     }
   }
 
