@@ -3,90 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feliz — Comenzar sesión privada</title>
+  <title>Comienza ahora — Feliz by Daniel Corral</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:ital,wght@0,300;0,500;0,700;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Calendly popup stylesheet only (no badge) -->
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+  <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
 </head>
-<body>
-  <nav class="nav" id="nav">
-    <a href="/" class="nav-logo">FELIZ</a>
-    <a class="nav-cta" href="/">Volver al sitio</a>
+<body class="start-body">
+
+  <!-- NAV: minimal — back arrow left, FELIZ centered -->
+  <nav class="cs-nav">
+    <a href="/" class="cs-nav-back" aria-label="Regresar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+      </svg>
+    </a>
+    <a href="/" class="cs-nav-logo">FELIZ</a>
   </nav>
 
-  <main class="start-page">
-    <div class="start-shell">
-      <section class="start-panel">
-        <div class="start-progress">
-          <div class="start-progress-track"><div class="start-progress-fill"></div></div>
-          <div class="start-progress-meta">
-            <span class="start-eyebrow">Sesión privada de claridad</span>
-            <span class="start-step-counter">STEP 1 OF 4</span>
+  <!-- MAIN CONTENT -->
+  <main class="cs-page">
+    <div class="cs-shell">
+
+      <!-- LEFT: copy -->
+      <div class="cs-left">
+        <h1 class="cs-title">Tu sesión de claridad está a punto de comenzar.</h1>
+        <p class="cs-desc">Un espacio para detenerte, entender dónde estás y definir con claridad hacia dónde quieres ir.</p>
+        <div class="cs-cta">
+          <button
+            class="cs-cta-btn"
+            onclick="Calendly.initPopupWidget({url:'https://calendly.com/feliz-by-daniel-corral?hide_gdpr_banner=1'});return false;"
+          >
+            Empieza ahora
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: photo collage -->
+      <div class="cs-right">
+        <div class="cs-collage">
+          <!-- Row 1: 3 small tiles -->
+          <div class="cs-col cs-col--top">
+            <div class="cs-tile cs-tile--sm"><img src="img/pilar-relaciones.jpg" alt=""></div>
+            <div class="cs-tile cs-tile--sm"><img src="img/esposo.jpg" alt=""></div>
+            <div class="cs-tile cs-tile--sm"><img src="img/aprendiz.jpg" alt=""></div>
+          </div>
+          <!-- Row 2: 1 large + 2 stacked -->
+          <div class="cs-col cs-col--mid">
+            <div class="cs-tile cs-tile--lg"><img src="img/hero-daniel.jpg" alt="Daniel Corral"></div>
+            <div class="cs-col cs-col--mid-right">
+              <div class="cs-tile cs-tile--md"><img src="img/medallista.jpg" alt=""></div>
+              <div class="cs-tile cs-tile--md"><img src="img/creador.jpg" alt=""></div>
+            </div>
+          </div>
+          <!-- Row 3: 3 small tiles -->
+          <div class="cs-col cs-col--bot">
+            <div class="cs-tile cs-tile--sm"><img src="img/olimpico.jpg" alt=""></div>
+            <div class="cs-tile cs-tile--sm"><img src="img/autor.jpg" alt=""></div>
+            <div class="cs-tile cs-tile--sm"><img src="img/pilar-mindset.jpg" alt=""></div>
           </div>
         </div>
+      </div>
 
-        <div class="start-card-shell">
-          <article class="start-step active" data-step="0">
-            <div class="start-step-card">
-              <h1 class="start-step-title">¿Es momento de tener esta conversación?</h1>
-              <p class="start-step-copy">Una sesión privada diseñada para ayudarte a encontrar claridad, dirección y tu siguiente paso.</p>
-              <div class="start-step-footer">
-                <div class="start-step-cta"><button class="btn-p start-button-link" data-target="1">Continuar</button></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="start-step" data-step="1">
-            <div class="start-step-card">
-              <h1 class="start-step-title">Al finalizar la sesión tendrás:</h1>
-              <div class="start-step-list">
-                <div class="start-step-list-item">Claridad sobre lo que hoy te está frenando</div>
-                <div class="start-step-list-item">Un mapa para visualizar tu situación actual</div>
-                <div class="start-step-list-item">Un plan de acción personalizado</div>
-                <div class="start-step-list-item">Seguimiento a los 7 días</div>
-              </div>
-              <div class="start-step-footer">
-                <div class="start-step-cta"><button class="btn-p start-button-link" data-target="2">Conocer los detalles</button></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="start-step" data-step="2">
-            <div class="start-step-card">
-              <h1 class="start-step-title">Una sola sesión.</h1>
-              <div class="start-step-list">
-                <div class="start-step-list-item">90 minutos</div>
-                <div class="start-step-list-item">Conversación privada</div>
-                <div class="start-step-list-item">Mapa de Claridad FELIZ</div>
-                <div class="start-step-list-item">Plan de acción personalizado</div>
-                <div class="start-step-list-item">Seguimiento a 7 días</div>
-              </div>
-              <p class="start-step-subtle">Inversión: $3,999 MXN</p>
-              <div class="start-step-footer">
-                <div class="start-step-cta"><button class="btn-p start-button-link" data-target="3">Reservar mi espacio</button></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="start-step" data-step="3">
-            <div class="start-step-card">
-              <h1 class="start-step-title">Solo cinco espacios disponibles cada mes.</h1>
-              <p class="start-step-copy">Si decidiste avanzar, el siguiente paso es seleccionar una fecha y completar tu reserva. Solo necesitas decidir si es momento de tener esta conversación.</p>
-              <div class="start-step-footer">
-                <div class="start-step-cta"><a class="btn-p start-button-link" href="https://calendly.com/" target="_blank" rel="noreferrer noopener">Elegir fecha y hora</a></div>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <aside class="start-image-panel">
-        <div class="start-image-wrap">
-          <img src="img/hero-daniel.jpg" alt="Persona en reflexión" loading="eager">
-          <div class="start-image-overlay"></div>
-        </div>
-      </aside>
     </div>
   </main>
 
