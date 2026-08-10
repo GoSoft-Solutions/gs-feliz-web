@@ -56,6 +56,8 @@ a { text-decoration: none; color: inherit; }
 .nav.on-light .nav-logo, .nav.on-light .nav-links a { color: var(--black); }
 .nav.on-light .nav-links a:hover { color: var(--orange); }
 .nav.on-light .hl { background: var(--black); }
+.nav.on-light .nav-cta { background: var(--black); color: var(--white); }
+@media (hover: hover) and (pointer: fine) { .nav.on-light .nav-cta:hover { background: #1a1a1a; } }
 
 .nav-logo { font-family: var(--f-d); font-size: 24px; letter-spacing: 0.03em; color: var(--white); transition: color 300ms var(--ease); }
 .nav-links { display: flex; gap: 24px; list-style: none; }
@@ -178,6 +180,9 @@ a { text-decoration: none; color: inherit; }
   line-height: 0.90;
   color: var(--white);
   margin-bottom: 16px;
+  text-shadow:
+    0 0 60px rgba(0,0,0,0.30),
+    0 0 120px rgba(0,0,0,0.18);
 }
 
 .hero-big-label {
@@ -1116,48 +1121,7 @@ a { text-decoration: none; color: inherit; }
   overflow: hidden;
 }
 
-/* ── Minimal nav ── */
-.cs-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 clamp(24px, 5vw, 72px);
-}
-
-.cs-nav-back {
-  position: absolute;
-  left: clamp(24px, 5vw, 72px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--w10);
-  color: var(--w80);
-  transition: border-color 200ms var(--ease), color 200ms var(--ease), background 200ms var(--ease);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cs-nav-back:hover {
-    border-color: var(--w30);
-    color: var(--white);
-    background: var(--w05);
-  }
-}
-
-.cs-nav-logo {
-  font-family: var(--f-d);
-  font-size: 22px;
-  letter-spacing: 0.05em;
-  color: var(--white);
-}
-
-/* ── Full-viewport page, no overflow ── */
+/* Full-viewport, no scroll */
 .cs-page {
   height: 100dvh;
   overflow: hidden;
@@ -1173,15 +1137,16 @@ a { text-decoration: none; color: inherit; }
   display: grid;
   grid-template-columns: minmax(280px, 40%) 1fr;
   gap: clamp(40px, 5vw, 80px);
-  align-items: center;
-  padding-top: 64px; /* offset for fixed nav */
+  align-items: stretch;
 }
 
-/* ── Left panel ── */
+/* ── Left: back button at top, copy centered ── */
 .cs-left {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  height: calc(100dvh - 64px);
+  justify-content: space-between;
+  padding: clamp(24px, 4vh, 48px) 0;
   opacity: 0;
   transform: translateY(28px);
   animation: csReveal 700ms 200ms var(--ease) forwards;
@@ -1189,6 +1154,35 @@ a { text-decoration: none; color: inherit; }
 
 @keyframes csReveal {
   to { opacity: 1; transform: translateY(0); }
+}
+
+.cs-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--w10);
+  color: var(--w60);
+  flex-shrink: 0;
+  transition: border-color 200ms var(--ease), color 200ms var(--ease), background 200ms var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cs-back:hover {
+    border-color: var(--w30);
+    color: var(--white);
+    background: var(--w05);
+  }
+}
+
+.cs-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  justify-content: center;
 }
 
 .cs-title {
@@ -1209,9 +1203,7 @@ a { text-decoration: none; color: inherit; }
   max-width: 480px;
 }
 
-.cs-cta {
-  margin-top: 8px;
-}
+.cs-cta { margin-top: 8px; }
 
 .cs-cta-btn {
   display: inline-flex;
@@ -1234,12 +1226,12 @@ a { text-decoration: none; color: inherit; }
 }
 .cs-cta-btn:active { transform: scale(0.97); }
 
-/* ── Right panel: collage ── */
+/* ── Right: collage same height as left ── */
 .cs-right {
   opacity: 0;
   transform: translateX(28px);
   animation: csRevealRight 800ms 350ms var(--ease) forwards;
-  height: calc(100dvh - 96px);
+  height: calc(100dvh - 64px);
   display: flex;
   align-items: center;
 }
@@ -1282,10 +1274,7 @@ a { text-decoration: none; color: inherit; }
   .cs-tile:hover img { transform: scale(1.05); }
 }
 
-/* Top row: 3 equal tiles */
 .cs-col--top .cs-tile--sm { flex: 1; }
-
-/* Middle row — slightly taller */
 .cs-col--mid { flex: 1.5; align-items: stretch; }
 .cs-tile--lg { flex: 1.4; }
 .cs-col--mid-right {
@@ -1296,6 +1285,4 @@ a { text-decoration: none; color: inherit; }
   min-height: 0;
 }
 .cs-tile--md { flex: 1; min-height: 0; }
-
-/* Bottom row: 3 equal tiles */
 .cs-col--bot .cs-tile--sm { flex: 1; }
