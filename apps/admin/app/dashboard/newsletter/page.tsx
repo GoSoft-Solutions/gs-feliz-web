@@ -17,7 +17,7 @@ export default function NewsletterPage() {
           <h1 className="text-2xl font-bold text-gray-800">Newsletter</h1>
           <p className="text-sm text-gray-500 mt-1">Link de suscripcion directa: <code className="text-green-700 bg-green-50 px-2 py-0.5 rounded">danielcorral.com.mx/news</code></p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors text-sm">
+        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm">
           + Nueva Campana de Email
         </button>
       </div>
@@ -115,9 +115,9 @@ export default function NewsletterPage() {
             )}
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium">Enviar Ahora</button>
-              <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Programar Envio</button>
-              <button className="px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700">Guardar Borrador</button>
+              <button className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium">Enviar Ahora</button>
+              <button className="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600">Programar Envio</button>
+              <button className="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-400">Guardar Borrador</button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>

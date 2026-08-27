@@ -9,7 +9,7 @@ export default function ContentPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Contenido</h1>
-        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors text-sm">
+        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm">
           + Nuevo Contenido
         </button>
       </div>
@@ -61,7 +61,7 @@ export default function ContentPage() {
             </div>
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Publicar</button>
+              <button className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800">Publicar</button>
               <button className="px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700">Guardar como borrador</button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>

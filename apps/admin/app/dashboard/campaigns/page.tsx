@@ -133,7 +133,7 @@ export default function CampaignsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Campanas</h1>
-        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors text-sm">+ Nueva Campana</button>
+        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm">+ Nueva Campana</button>
       </div>
 
       {/* CREATE */}
@@ -199,7 +199,7 @@ export default function CampaignsPage() {
             )}
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button onClick={handleCreate} className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium">Crear Campana</button>
+              <button onClick={handleCreate} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium">Crear Campana</button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function CampaignsPage() {
                     </div>
                   )}
                   <div className="flex gap-2 pt-2">
-                    <button onClick={() => handleUpdate(campaign.id)} className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg">Guardar</button>
+                    <button onClick={() => handleUpdate(campaign.id)} className="px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg">Guardar</button>
                     <button onClick={() => setEditId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg">Cancelar</button>
                   </div>
                 </div>
