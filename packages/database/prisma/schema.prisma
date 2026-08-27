@@ -1,0 +1,117 @@
+// FELIZ Platform — Database schema
+//
+// Phase 2 scope only: CORE module (Contact, ContactSource, Campaign,
+// ContactEvent). Models for future modules (Content, Newsletter, Payments,
+// Memberships, Courses, Sessions, Users/Auth) are intentionally NOT defined
+// yet — they are designed conceptually in docs/architecture.md and will be
+// added via their own migration when each phase starts, per development
+// rule #1 ("no generar funcionalidades futuras antes de necesitarlas").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactStatus {
+  LEAD
+  ACTIVE
+  CUSTOMER
+  INACTIVE
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+/// A person known to FELIZ, regardless of source or whether they have a
+/// user account yet. This is the central identity entity of the platform.
+model Contact {
+  id        String        @id @default(uuid()) @db.Uuid
+  email     String?
+  firstName String?       @map("first_name")
+  lastName  String?       @map("last_name")
+  phone     String?
+  status    ContactStatus @default(LEAD)
+  metadata  Json          @default("{}") @db.JsonB
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  sources ContactSource[]
+  events  ContactEvent[]
+
+  // Email is normalized (lowercased/trimmed) at the application layer
+  // before writes. A partial unique index enforces no duplicate emails
+  // among contacts that do have one, while still allowing multiple
+  // contacts with a NULL email.
+  @@unique([email], map: "contacts_email_key")
+  @@map("contacts")
+}
+
+/// Tracks where a Contact came from (ManyChat, landing form, referral,
+/// etc.) without coupling the core Contact model to any single provider.
+model ContactSource {
+  id         String    @id @default(uuid()) @db.Uuid
+  contactId  String    @map("contact_id") @db.Uuid
+  provider   String
+  externalId String?   @map("external_id")
+  source     String?
+  campaignId String?   @map("campaign_id") @db.Uuid
+  metadata   Json      @default("{}") @db.JsonB
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  contact  Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  // A given (provider, external_id) pair identifies a unique external
+  // identity, e.g. the same ManyChat subscriber ID should always map back
+  // to the same Contact (idempotency for the ManyChat integration).
+  @@unique([provider, externalId], map: "contact_sources_provider_external_id_key")
+  @@index([contactId])
+  @@map("contact_sources")
+}
+
+/// A marketing/acquisition campaign a Contact can be associated with.
+model Campaign {
+  id        String         @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String         @unique
+  source    String?
+  status    CampaignStatus @default(DRAFT)
+  metadata  Json           @default("{}") @db.JsonB
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  sources ContactSource[]
+  events  ContactEvent[]
+
+  @@map("campaigns")
+}
+
+/// Append-only history of everything that happens to a Contact
+/// (lead created, content delivered, purchase completed, etc.).
+/// event_type is a free-form string by design so new event types can be
+/// added over time without a schema migration.
+model ContactEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  contactId  String   @map("contact_id") @db.Uuid
+  eventType  String   @map("event_type")
+  campaignId String?  @map("campaign_id") @db.Uuid
+  source     String?
+  metadata   Json     @default("{}") @db.JsonB
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  contact  Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([contactId])
+  @@index([eventType])
+  @@map("contact_events")
+}

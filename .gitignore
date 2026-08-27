@@ -11,3 +11,30 @@ node_modules/
 
 # Logs
 *.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Turborepo
+.turbo/
+
+# Prisma
+packages/database/generated/
+
+# Testing
+coverage/
+
+# Deploy artifacts
+deploy.zip
+deploy-pkg/
+eb-full-log*/
+eb-log*.txt
+*.zip

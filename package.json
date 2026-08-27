@@ -1,0 +1,24 @@
+{
+  "name": "feliz-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "FELIZ Platform - Modular monolith monorepo (landing + API + portal + admin + worker)",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @feliz/database generate",
+    "db:migrate": "pnpm --filter @feliz/database migrate:dev",
+    "db:studio": "pnpm --filter @feliz/database studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}
