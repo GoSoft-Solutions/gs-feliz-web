@@ -24,6 +24,12 @@ export enum CampaignStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export enum ContentStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
 /**
  * Known contact event types. This is intentionally a plain string union
  * (not a DB enum) because the CONTACT_EVENTS model is designed to grow

@@ -54,10 +54,29 @@ export const envSchema = z.object({
   GOOGLE_CLIENT_ID: optionalString(),
   GOOGLE_CLIENT_SECRET: optionalString(),
 
-  // --- Future: AWS SES / SQS (Phase 6, not required yet) ---
+  // --- Email delivery (Phase 6 / new subscribe flow) ---
+  // EMAIL_PROVIDER selects how welcome emails are delivered:
+  //   'log' (default) — logs the rendered email instead of sending it.
+  //     Lets the whole capture → send flow run end-to-end while SES is
+  //     still in sandbox or the domain is not yet verified.
+  //   'ses' — sends for real via AWS SES (requires a verified sender).
+  EMAIL_PROVIDER: z.enum(['log', 'ses']).default('log'),
   AWS_REGION: optionalString(),
   SES_FROM_EMAIL: optionalString(),
+  // Default sender name shown to recipients when a campaign doesn't set one.
+  SES_FROM_NAME: optionalString(),
+  // When set, the API publishes subscribe events here and the worker
+  // consumes them to send email asynchronously. When empty, the API sends
+  // inline (synchronously) — useful for local/demo without SQS.
   SQS_QUEUE_URL: optionalString(),
+
+  // --- Content storage (S3) ---
+  // Bucket that holds uploaded content files (PDFs and any other type).
+  // When empty, content upload endpoints are disabled (external links
+  // still work). Presigned URLs let the browser upload directly to S3.
+  CONTENT_BUCKET: optionalString(),
+  // How long (seconds) generated upload/download URLs stay valid.
+  S3_URL_EXPIRY_SECONDS: z.coerce.number().int().positive().default(3600),
 
   // --- Future: Auth (Phase 7, not required yet) ---
   JWT_SECRET: optionalString(),

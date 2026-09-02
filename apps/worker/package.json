@@ -11,8 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.699.0",
+    "@aws-sdk/client-sqs": "^3.699.0",
     "@feliz/config": "workspace:*",
-    "@feliz/database": "workspace:*"
+    "@feliz/database": "workspace:*",
+    "@feliz/shared-types": "workspace:*",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -37,8 +37,25 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
+  // CORS: allow the explicitly configured origins (CORS_ORIGINS) plus any
+  // Vercel deployment (*.vercel.app) and the danielcorral.com.mx domain and
+  // its subdomains. Using a callback keeps this resilient to exact-string
+  // mismatches (trailing slashes, preview URLs) that would otherwise block
+  // the browser's preflight while direct API calls still work.
+  const allowedExact = new Set(env.CORS_ORIGINS);
+  const allowedPatterns = [
+    /^https?:\/\/localhost(:\d+)?$/,
+    /\.vercel\.app$/,
+    /(^|\.)danielcorral\.com\.mx$/,
+  ];
   app.enableCors({
-    origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : false,
+    origin(origin, callback) {
+      // Non-browser clients (curl, server-to-server) send no Origin — allow.
+      if (!origin) return callback(null, true);
+      if (allowedExact.has(origin)) return callback(null, true);
+      if (allowedPatterns.some((re) => re.test(origin))) return callback(null, true);
+      return callback(null, false);
+    },
     credentials: true,
   });
 

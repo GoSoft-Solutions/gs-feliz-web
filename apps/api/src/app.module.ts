@@ -9,6 +9,8 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { CoreModule } from './modules/core/core.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { PublicModule } from './modules/public/public.module';
+import { ContentModule } from './modules/content/content.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import type { EnvConfig } from '@feliz/config';
 
@@ -60,6 +62,8 @@ import type { EnvConfig } from '@feliz/config';
     HealthModule,
     CoreModule,
     IntegrationsModule,
+    PublicModule,
+    ContentModule,
   ],
   providers: [
     {

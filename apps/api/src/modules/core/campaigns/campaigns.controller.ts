@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CampaignsService } from './campaigns.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -39,5 +39,11 @@ export class CampaignsController {
     @Body() dto: UpdateCampaignDto,
   ): CampaignsServiceReturn<'update'> {
     return this.campaignsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a campaign' })
+  remove(@Param('id', ParseUUIDPipe) id: string): CampaignsServiceReturn<'remove'> {
+    return this.campaignsService.remove(id);
   }
 }

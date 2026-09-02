@@ -1,5 +1,5 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsEmail, IsEnum, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { CampaignStatus } from '@feliz/shared-types';
 
 // lowercase, digits, hyphens only — matches how slugs are used in URLs
@@ -28,6 +28,31 @@ export class CreateCampaignDto {
   @IsOptional()
   @IsEnum(CampaignStatus)
   status?: CampaignStatus;
+
+  // --- Welcome email (designed by the client in the admin console) ---
+  // Optional so a campaign can be created as a DRAFT before its email is
+  // designed. The automatic send is skipped until subject + html are set.
+  @ApiPropertyOptional({ example: 'Tu guía gratuita está lista' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  emailSubject?: string;
+
+  @ApiPropertyOptional({ example: '<h1>Hola</h1><p>Aquí está tu contenido...</p>' })
+  @IsOptional()
+  @IsString()
+  emailHtml?: string;
+
+  @ApiPropertyOptional({ example: 'Daniel Corral' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  emailFromName?: string;
+
+  @ApiPropertyOptional({ example: 'hola@danielcorral.com.mx' })
+  @IsOptional()
+  @IsEmail()
+  emailReplyTo?: string;
 
   @ApiPropertyOptional({ example: {} })
   @IsOptional()

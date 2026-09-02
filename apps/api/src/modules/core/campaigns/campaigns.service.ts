@@ -21,6 +21,10 @@ export class CampaignsService {
         slug: dto.slug,
         source: dto.source,
         status: dto.status,
+        emailSubject: dto.emailSubject,
+        emailHtml: dto.emailHtml,
+        emailFromName: dto.emailFromName,
+        emailReplyTo: dto.emailReplyTo,
         metadata: (dto.metadata ?? {}) as Prisma.InputJsonValue,
       },
     });
@@ -48,6 +52,14 @@ export class CampaignsService {
     return this.prisma.campaign.findUnique({ where: { slug } });
   }
 
+  async remove(id: string) {
+    await this.findOne(id);
+    // ContactSource.campaignId / ContactEvent.campaignId are ON DELETE SET
+    // NULL, so removing a campaign keeps its contacts and history intact.
+    await this.prisma.campaign.delete({ where: { id } });
+    return { success: true };
+  }
+
   async update(id: string, dto: UpdateCampaignDto) {
     await this.findOne(id);
 
@@ -57,6 +69,10 @@ export class CampaignsService {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.source !== undefined ? { source: dto.source } : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.emailSubject !== undefined ? { emailSubject: dto.emailSubject } : {}),
+        ...(dto.emailHtml !== undefined ? { emailHtml: dto.emailHtml } : {}),
+        ...(dto.emailFromName !== undefined ? { emailFromName: dto.emailFromName } : {}),
+        ...(dto.emailReplyTo !== undefined ? { emailReplyTo: dto.emailReplyTo } : {}),
         ...(dto.metadata !== undefined ? { metadata: dto.metadata as Prisma.InputJsonValue } : {}),
       },
     });

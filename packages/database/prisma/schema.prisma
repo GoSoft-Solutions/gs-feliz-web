@@ -9,6 +9,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Include the Linux engine so the client works in the Docker image
+  // (node:22-slim is Debian with OpenSSL 3.0) in addition to the local
+  // dev machine's native target.
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -27,6 +31,12 @@ enum CampaignStatus {
   DRAFT
   ACTIVE
   PAUSED
+  ARCHIVED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
   ARCHIVED
 }
 
@@ -79,20 +89,64 @@ model ContactSource {
 }
 
 /// A marketing/acquisition campaign a Contact can be associated with.
+///
+/// A campaign also carries the welcome email that is sent automatically
+/// when a contact subscribes through its capture page
+/// (danielcorral.com.mx/news/<slug>). The email fields are optional so a
+/// campaign can exist as a DRAFT before its email is designed; sending is
+/// skipped when emailSubject/emailHtml are not set.
 model Campaign {
-  id        String         @id @default(uuid()) @db.Uuid
-  name      String
-  slug      String         @unique
-  source    String?
-  status    CampaignStatus @default(DRAFT)
-  metadata  Json           @default("{}") @db.JsonB
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String         @unique
+  source        String?
+  status        CampaignStatus @default(DRAFT)
+  // --- Welcome email (designed by the client in the admin console) ---
+  emailSubject  String?        @map("email_subject")
+  emailHtml     String?        @map("email_html")
+  emailFromName String?        @map("email_from_name")
+  emailReplyTo  String?        @map("email_reply_to")
+  metadata      Json           @default("{}") @db.JsonB
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   sources ContactSource[]
   events  ContactEvent[]
 
   @@map("campaigns")
+}
+
+/// A piece of downloadable content the client uploads (PDFs today, any
+/// file type going forward). The file itself lives in S3; this row holds
+/// its metadata and a reference to the stored object.
+///
+/// storageKey is the S3 object key when the file was uploaded through the
+/// platform. downloadUrl is the link handed to end users — either a
+/// generated link to the S3 object or an external URL the client pasted
+/// (e.g. an existing Drive/Dropbox link). At least one of them is set.
+model ContentItem {
+  id          String        @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  category    String?
+  /// MIME type of the file (e.g. application/pdf). Free-form so any type
+  /// is supported without a schema change.
+  contentType String?       @map("content_type")
+  /// Original file name as uploaded, for display and download naming.
+  fileName    String?       @map("file_name")
+  sizeBytes   Int?          @map("size_bytes")
+  /// S3 object key (null when the content is just an external link).
+  storageKey  String?       @map("storage_key")
+  /// Public/shareable download link handed to end users.
+  downloadUrl String?       @map("download_url")
+  status      ContentStatus @default(DRAFT)
+  metadata    Json          @default("{}") @db.JsonB
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([status])
+  @@map("content_items")
 }
 
 /// Append-only history of everything that happens to a Contact

@@ -1,0 +1,25 @@
+# Never ship host artifacts into the image — they carry Windows binaries
+# (Prisma engines, esbuild, etc.) and stale builds. The image rebuilds
+# everything cleanly inside Linux.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+
+# Deploy/build junk from earlier EB attempts.
+apps/api/deploy.zip
+apps/api/deploy-pkg
+apps/api/eb-full-log*
+apps/api/eb-log*.txt
+apps/api/_*.txt
+**/*.zip
+
+# VCS / editor / env
+.git
+.gitignore
+**/.env
+**/.env.*
+!**/.env.example
+
+# Docs and misc not needed at runtime
+**/*.md

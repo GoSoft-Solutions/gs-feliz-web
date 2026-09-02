@@ -1,13 +1,32 @@
 'use client';
 import { useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+
 export default function NewsletterPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) setSubmitted(true);
+    if (!email) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/v1/public/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error('request failed');
+      setSubmitted(true);
+    } catch {
+      setError('No pudimos registrar tu correo. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,25 +67,30 @@ export default function NewsletterPage() {
               />
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '16px 20px',
-                  background: '#F4711A',
+                  background: loading ? 'rgba(244,113,26,0.55)' : '#F4711A',
                   border: 'none',
                   borderRadius: '9999px',
                   color: '#0A0A0A',
                   fontSize: '15px',
                   fontWeight: '700',
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  cursor: 'pointer',
+                  cursor: loading ? 'default' : 'pointer',
                   transition: 'background 0.2s',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#FF8C35'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#F4711A'}
+                onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#FF8C35'; }}
+                onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#F4711A'; }}
               >
-                Suscribirme
+                {loading ? 'Enviando...' : 'Suscribirme'}
               </button>
             </form>
+
+            {error && (
+              <p style={{ color: '#FF6B6B', fontSize: '13px', marginTop: '12px' }}>{error}</p>
+            )}
 
             <p style={{ color: 'rgba(240,237,230,0.28)', fontSize: '12px', marginTop: '16px' }}>
               Sin spam. Cancela cuando quieras.
