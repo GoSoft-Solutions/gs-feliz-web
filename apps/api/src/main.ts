@@ -45,8 +45,8 @@ async function bootstrap(): Promise<void> {
   const allowedExact = new Set(env.CORS_ORIGINS);
   const allowedPatterns = [
     /^https?:\/\/localhost(:\d+)?$/,
-    /\.vercel\.app$/,
-    /(^|\.)danielcorral\.com\.mx$/,
+    /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/,
+    /^https:\/\/([a-z0-9-]+\.)*danielcorral\.com\.mx$/,
   ];
   app.enableCors({
     origin(origin, callback) {
