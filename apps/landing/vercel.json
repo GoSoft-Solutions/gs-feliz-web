@@ -11,6 +11,10 @@
     {
       "source": "/news/:path*",
       "destination": "https://portal.danielcorral.com.mx/news/:path*"
+    },
+    {
+      "source": "/_next/:path*",
+      "destination": "https://portal.danielcorral.com.mx/_next/:path*"
     }
   ]
 }
