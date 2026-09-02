@@ -40,32 +40,49 @@ function decompose(html: string | null): { body: string; cta: string; ctaUrl: st
 
 function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Set the initial HTML ONCE on mount. We deliberately do NOT bind the div's
+  // innerHTML to `value` on every render: doing so (e.g. via
+  // dangerouslySetInnerHTML on a controlled contentEditable) resets the
+  // caret to the start on each keystroke, which makes typed text appear
+  // reversed. The DOM is the source of truth while editing; we only push
+  // changes out via onChange.
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const exec = (cmd: string, val?: string) => {
+    editorRef.current?.focus();
     document.execCommand(cmd, false, val);
     if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
+
+  const btn = 'px-3 py-1.5 text-sm rounded hover:bg-gray-200 transition-colors';
+
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
+    <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gray-900/10 focus-within:border-gray-400">
       <div className="flex gap-1 p-2 bg-gray-50 border-b border-gray-200 flex-wrap">
-        <button type="button" onClick={() => exec('bold')} className="px-3 py-1.5 text-sm font-bold hover:bg-gray-200 rounded">B</button>
-        <button type="button" onClick={() => exec('italic')} className="px-3 py-1.5 text-sm italic hover:bg-gray-200 rounded">I</button>
-        <button type="button" onClick={() => exec('underline')} className="px-3 py-1.5 text-sm underline hover:bg-gray-200 rounded">U</button>
+        <button type="button" onClick={() => exec('bold')} className={`${btn} font-bold`}>B</button>
+        <button type="button" onClick={() => exec('italic')} className={`${btn} italic`}>I</button>
+        <button type="button" onClick={() => exec('underline')} className={`${btn} underline`}>U</button>
         <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => { const url = prompt('URL del enlace:'); if (url) exec('createLink', url); }} className="px-3 py-1.5 text-sm text-blue-600 hover:bg-gray-200 rounded">Link</button>
-        <button type="button" onClick={() => exec('unlink')} className="px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-200 rounded">Unlink</button>
+        <button type="button" onClick={() => { const url = prompt('URL del enlace:'); if (url) exec('createLink', url); }} className={`${btn} text-blue-600`}>Enlace</button>
+        <button type="button" onClick={() => exec('unlink')} className={`${btn} text-gray-500`}>Quitar enlace</button>
         <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec('insertUnorderedList')} className="px-3 py-1.5 text-sm hover:bg-gray-200 rounded">Lista</button>
-        <button type="button" onClick={() => exec('formatBlock', 'h3')} className="px-3 py-1.5 text-sm font-semibold hover:bg-gray-200 rounded">H3</button>
-        <button type="button" onClick={() => exec('formatBlock', 'p')} className="px-3 py-1.5 text-sm hover:bg-gray-200 rounded">P</button>
+        <button type="button" onClick={() => exec('insertUnorderedList')} className={btn}>Lista</button>
+        <button type="button" onClick={() => exec('formatBlock', 'h3')} className={`${btn} font-semibold`}>Titulo</button>
+        <button type="button" onClick={() => exec('formatBlock', 'p')} className={btn}>Parrafo</button>
         <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec('justifyLeft')} className="px-3 py-1.5 text-sm hover:bg-gray-200 rounded">Izq</button>
-        <button type="button" onClick={() => exec('justifyCenter')} className="px-3 py-1.5 text-sm hover:bg-gray-200 rounded">Centro</button>
+        <button type="button" onClick={() => exec('justifyLeft')} className={btn}>Izq</button>
+        <button type="button" onClick={() => exec('justifyCenter')} className={btn}>Centro</button>
       </div>
       <div
         ref={editorRef}
         contentEditable
-        className="p-4 min-h-[200px] text-sm text-gray-700 focus:outline-none prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: value }}
+        className="p-4 min-h-[220px] text-sm text-gray-700 focus:outline-none prose prose-sm max-w-none"
         onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
         suppressContentEditableWarning
       />
@@ -289,7 +306,7 @@ export default function CampaignsPage() {
                     <div><label className="block text-sm text-gray-600 mb-1">Nombre</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
                     <div><label className="block text-sm text-gray-600 mb-1">Asunto</label><input value={form.emailSubject} onChange={(e) => setForm({ ...form, emailSubject: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
                   </div>
-                  <div><label className="block text-sm text-gray-600 mb-1">Contenido del correo</label><RichEditor value={form.emailHtml} onChange={(v) => setForm({ ...form, emailHtml: v })} /></div>
+                  <div><label className="block text-sm text-gray-600 mb-1">Contenido del correo</label><RichEditor key={`edit-${campaign.id}`} value={form.emailHtml} onChange={(v) => setForm({ ...form, emailHtml: v })} /></div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm text-gray-600 mb-1">Boton</label><input value={form.emailCta} onChange={(e) => setForm({ ...form, emailCta: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
                     <div><label className="block text-sm text-gray-600 mb-1">URL del boton</label><input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
