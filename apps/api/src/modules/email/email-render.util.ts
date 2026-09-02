@@ -10,6 +10,8 @@ export interface CampaignEmailSource {
 export interface SubscriberContext {
   email: string;
   firstName?: string | null;
+  /** Full unsubscribe URL for this recipient; appended as an email footer. */
+  unsubscribeUrl?: string;
 }
 
 /**
@@ -19,7 +21,8 @@ export interface SubscriberContext {
  * sending rather than deliver a blank message.
  *
  * Supported template tokens (case-sensitive), substituted in both subject
- * and body: {{nombre}} and {{email}}.
+ * and body: {{nombre}} and {{email}}. An unsubscribe footer is appended
+ * when unsubscribeUrl is provided (required for compliant bulk email).
  */
 export function renderCampaignEmail(
   campaign: CampaignEmailSource,
@@ -34,13 +37,22 @@ export function renderCampaignEmail(
     email: subscriber.email,
   };
 
+  const body = applyTokens(campaign.emailHtml, tokens);
+  const html = subscriber.unsubscribeUrl
+    ? `${body}${unsubscribeFooter(subscriber.unsubscribeUrl)}`
+    : body;
+
   return {
     to: subscriber.email,
     subject: applyTokens(campaign.emailSubject, tokens),
-    html: applyTokens(campaign.emailHtml, tokens),
+    html,
     fromName: campaign.emailFromName ?? undefined,
     replyTo: campaign.emailReplyTo ?? undefined,
   };
+}
+
+function unsubscribeFooter(url: string): string {
+  return `<hr style="margin-top:32px;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;text-align:center;margin-top:16px">Recibes este correo porque te suscribiste en danielcorral.com.mx.<br/><a href="${url}" style="color:#888">Cancelar suscripción</a></p>`;
 }
 
 function applyTokens(template: string, tokens: Record<string, string>): string {

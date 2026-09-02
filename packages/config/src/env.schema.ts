@@ -78,6 +78,14 @@ export const envSchema = z.object({
   // How long (seconds) generated upload/download URLs stay valid.
   S3_URL_EXPIRY_SECONDS: z.coerce.number().int().positive().default(3600),
 
+  // --- Unsubscribe ---
+  // Public API base URL used to build the unsubscribe link inside emails.
+  // The link points to the API's public unsubscribe endpoint.
+  PUBLIC_API_URL: z.string().default('https://api.danielcorral.com.mx'),
+  // Secret used to sign unsubscribe tokens (HMAC) so a link only works for
+  // its intended recipient. Falls back to a static dev value when unset.
+  UNSUBSCRIBE_SECRET: z.string().default('feliz-unsubscribe-dev-secret'),
+
   // --- Future: Auth (Phase 7, not required yet) ---
   JWT_SECRET: optionalString(),
 });

@@ -1,0 +1,191 @@
+=== ECR LOGIN === 
+Login Succeeded
+LOGIN_EXIT=0 
+=== DOCKER BUILD === 
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.85kB 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/node:22-slim
+#2 DONE 0.9s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 541B 0.0s done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 DONE 0.0s
+
+#5 [deps  1/13] FROM docker.io/library/node:22-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5
+#5 resolve docker.io/library/node:22-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5 0.0s done
+#5 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 71.85MB 4.2s done
+#4 DONE 4.3s
+
+#6 [deps  8/13] COPY apps/admin/package.json apps/admin/package.json
+#6 CACHED
+
+#7 [deps 11/13] COPY packages/database/package.json packages/database/package.json
+#7 CACHED
+
+#8 [deps  4/13] WORKDIR /app
+#8 CACHED
+
+#9 [deps 12/13] COPY packages/shared-types/package.json packages/shared-types/package.json
+#9 CACHED
+
+#10 [deps  6/13] COPY apps/api/package.json apps/api/package.json
+#10 CACHED
+
+#11 [deps 10/13] COPY packages/config/package.json packages/config/package.json
+#11 CACHED
+
+#12 [deps  9/13] COPY apps/portal/package.json apps/portal/package.json
+#12 CACHED
+
+#13 [deps 13/13] RUN pnpm install --frozen-lockfile
+#13 CACHED
+
+#14 [deps  7/13] COPY apps/worker/package.json apps/worker/package.json
+#14 CACHED
+
+#15 [deps  3/13] RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+#15 CACHED
+
+#16 [deps  5/13] COPY pnpm-workspace.yaml package.json pnpm-lock.yaml turbo.json ./
+#16 CACHED
+
+#17 [deps  2/13] RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates   && rm -rf /var/lib/apt/lists/*
+#17 CACHED
+
+#18 [build 1/5] WORKDIR /app
+#18 CACHED
+
+#19 [build 2/5] COPY . .
+#19 DONE 0.4s
+
+#20 [build 3/5] RUN pnpm --filter @feliz/database exec prisma generate
+#20 1.408 Prisma schema loaded from prisma/schema.prisma
+#20 1.744 
+#20 1.744 ✔ Generated Prisma Client (v5.22.0) to ./../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client in 85ms
+#20 1.744 
+#20 1.744 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#20 1.744 
+#20 1.744 Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+#20 1.744 
+#20 DONE 2.0s
+
+#21 [build 4/5] RUN pnpm --filter @feliz/shared-types --filter @feliz/config --filter @feliz/database build
+#21 0.772 Scope: 3 of 8 workspace projects
+#21 0.777 packages/shared-types build$ tsc
+#21 0.777 packages/database build$ prisma generate && tsc
+#21 0.778 packages/config build$ tsc
+#21 1.287 packages/shared-types build: Done
+#21 1.295 packages/database build: Prisma schema loaded from prisma/schema.prisma
+#21 1.525 packages/config build: Done
+#21 1.549 packages/database build: ✔ Generated Prisma Client (v5.22.0) to ./../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client in 70ms
+#21 1.550 packages/database build: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#21 1.550 packages/database build: Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+#21 2.141 packages/database build: Done
+#21 DONE 2.2s
+
+#22 [build 5/5] RUN pnpm --filter @feliz/api build
+#22 0.820 
+#22 0.820 > @feliz/api@0.1.0 build /app/apps/api
+#22 0.820 > nest build
+#22 0.820 
+#22 DONE 5.4s
+
+#8 [deps  4/13] WORKDIR /app
+#8 CACHED
+
+#23 [runner 5/5] COPY --from=build /app /app
+#23 DONE 3.8s
+
+#24 exporting to image
+#24 exporting layers
+#24 exporting layers 33.3s done
+#24 exporting manifest sha256:b405466a86e81812dc66ee0b163d8bf5f25042c396ae2811b1a588c81035d030 0.0s done
+#24 exporting config sha256:a7689518794983212286cb7c331a2530f588e18fead32eb50d4120e4441a9e81 0.0s done
+#24 exporting attestation manifest sha256:689478c2051a6d5d59a2b183912692fb63a0bd3b2fb703656096f68a00d2b2b7
+#24 exporting attestation manifest sha256:689478c2051a6d5d59a2b183912692fb63a0bd3b2fb703656096f68a00d2b2b7 0.1s done
+#24 exporting manifest list sha256:a3051174432aea7f7613017dfc5ac2f3fa60a504dae96c5fcc98f0a687cefe66 0.0s done
+#24 naming to 367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api:latest
+#24 naming to 367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api:latest done
+#24 unpacking to 367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api:latest
+#24 unpacking to 367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api:latest 7.7s done
+#24 DONE 41.3s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/ylt2wb2qulpbms8d9v7t379c8
+BUILD_EXIT=0 
+=== DOCKER PUSH === 
+The push refers to repository [367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api]
+6529cb6c3015: Waiting
+f40b5c7601ba: Waiting
+3cddab114eda: Waiting
+5028ce21d5eb: Waiting
+4c64d17e95f9: Waiting
+a8ac7f6c67ab: Waiting
+0282d618b52c: Waiting
+cea7eb9bbe80: Waiting
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Waiting
+f40b5c7601ba: Waiting
+3cddab114eda: Waiting
+5028ce21d5eb: Waiting
+4c64d17e95f9: Waiting
+a8ac7f6c67ab: Waiting
+0282d618b52c: Waiting
+cea7eb9bbe80: Waiting
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Waiting
+6529cb6c3015: Waiting
+a8ac7f6c67ab: Waiting
+0282d618b52c: Waiting
+cea7eb9bbe80: Waiting
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Waiting
+6529cb6c3015: Waiting
+f40b5c7601ba: Waiting
+3cddab114eda: Waiting
+5028ce21d5eb: Waiting
+4c64d17e95f9: Waiting
+3cddab114eda: Waiting
+5028ce21d5eb: Waiting
+4c64d17e95f9: Waiting
+a8ac7f6c67ab: Waiting
+0282d618b52c: Waiting
+cea7eb9bbe80: Waiting
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Waiting
+6529cb6c3015: Waiting
+f40b5c7601ba: Waiting
+a8ac7f6c67ab: Waiting
+0282d618b52c: Waiting
+cea7eb9bbe80: Waiting
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Waiting
+6529cb6c3015: Waiting
+f40b5c7601ba: Waiting
+3cddab114eda: Layer already exists
+5028ce21d5eb: Waiting
+4c64d17e95f9: Waiting
+4c64d17e95f9: Layer already exists
+a8ac7f6c67ab: Layer already exists
+0282d618b52c: Layer already exists
+cea7eb9bbe80: Layer already exists
+51c53f95c2ca: Waiting
+cb5aa8e1af9c: Layer already exists
+6529cb6c3015: Waiting
+f40b5c7601ba: Waiting
+5028ce21d5eb: Layer already exists
+51c53f95c2ca: Layer already exists
+6529cb6c3015: Pushed
+f40b5c7601ba: Pushed
+latest: digest: sha256:a3051174432aea7f7613017dfc5ac2f3fa60a504dae96c5fcc98f0a687cefe66 size: 856
+PUSH_EXIT=0 
+DONE 

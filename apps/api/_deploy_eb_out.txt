@@ -1,0 +1,59 @@
+=== PREP BUNDLE === 
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "367764689490.dkr.ecr.us-east-1.amazonaws.com/gosoft-feliz-api:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8080,
+      "HostPort": 8080
+    }
+  ]
+}
+=== ZIP === 
+=== UPLOAD S3 === 
+Completed 318 Bytes/318 Bytes (439 Bytes/s) with 1 file(s) remainingupload: .\_ebdeploy.zip to s3://gosoft-feliz-eb-deploy-prod/cors-1062214928.zip
+UPLOAD_EXIT=0 
+=== CREATE APP VERSION === 
+{
+    "ApplicationVersion": {
+        "ApplicationVersionArn": "arn:aws:elasticbeanstalk:us-east-1:367764689490:applicationversion/gosoft-feliz-eb-app/cors-1062214928",
+        "ApplicationName": "gosoft-feliz-eb-app",
+        "VersionLabel": "cors-1062214928",
+        "SourceBundle": {
+            "S3Bucket": "gosoft-feliz-eb-deploy-prod",
+            "S3Key": "cors-1062214928.zip"
+        },
+        "DateCreated": "2026-09-02T08:17:34.142000+00:00",
+        "DateUpdated": "2026-09-02T08:17:34.142000+00:00",
+        "Status": "UNPROCESSED"
+    }
+}
+CREATEVER_EXIT=0 
+=== UPDATE ENV === 
+{
+    "EnvironmentName": "gosoft-feliz-eb-env-api-prod",
+    "EnvironmentId": "e-mn3eimi3xb",
+    "ApplicationName": "gosoft-feliz-eb-app",
+    "VersionLabel": "cors-1062214928",
+    "SolutionStackName": "64bit Amazon Linux 2023 v4.13.7 running Docker",
+    "PlatformArn": "arn:aws:elasticbeanstalk:us-east-1::platform/Docker running on 64bit Amazon Linux 2023/4.13.7",
+    "EndpointURL": "34.233.185.220",
+    "CNAME": "gosoft-feliz-eb-env-api-prod.eba-m7gi4bzm.us-east-1.elasticbeanstalk.com",
+    "DateCreated": "2026-08-27T06:27:36.605000+00:00",
+    "DateUpdated": "2026-09-02T08:17:36.221000+00:00",
+    "Status": "Updating",
+    "AbortableOperationInProgress": true,
+    "Health": "Grey",
+    "Tier": {
+        "Name": "WebServer",
+        "Type": "Standard",
+        "Version": "1.0"
+    },
+    "EnvironmentArn": "arn:aws:elasticbeanstalk:us-east-1:367764689490:environment/gosoft-feliz-eb-app/gosoft-feliz-eb-env-api-prod"
+}
+UPDATEENV_EXIT=0 
+VERSION=cors-1062214928 
+DONE 

@@ -43,15 +43,17 @@ enum ContentStatus {
 /// A person known to FELIZ, regardless of source or whether they have a
 /// user account yet. This is the central identity entity of the platform.
 model Contact {
-  id        String        @id @default(uuid()) @db.Uuid
-  email     String?
-  firstName String?       @map("first_name")
-  lastName  String?       @map("last_name")
-  phone     String?
-  status    ContactStatus @default(LEAD)
-  metadata  Json          @default("{}") @db.JsonB
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String?
+  firstName    String?       @map("first_name")
+  lastName     String?       @map("last_name")
+  phone        String?
+  status       ContactStatus @default(LEAD)
+  /// When true, the contact opted out and must not receive further email.
+  unsubscribed Boolean       @default(false)
+  metadata     Json          @default("{}") @db.JsonB
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   sources ContactSource[]
   events  ContactEvent[]

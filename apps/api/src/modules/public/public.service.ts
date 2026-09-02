@@ -1,10 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@feliz/database';
+import type { EnvConfig } from '@feliz/config';
+import { ENV_CONFIG } from '../../config/app-config.module';
 import { PrismaService } from '../../database/prisma.service';
 import { normalizeEmail } from '../../common/utils/normalize-email.util';
 import { EmailService } from '../email/email.service';
 import { QueuePublisherService } from '../email/queue-publisher.service';
 import { renderCampaignEmail } from '../email/email-render.util';
+import { buildUnsubscribeUrl } from '../email/unsubscribe.util';
 import { SubscribeDto } from './dto/subscribe.dto';
 
 const PROVIDER = 'LANDING';
@@ -38,7 +41,30 @@ export class PublicService {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
     private readonly queue: QueuePublisherService,
+    @Inject(ENV_CONFIG) private readonly env: EnvConfig,
   ) {}
+
+  /**
+   * Flags a contact as unsubscribed so it stops receiving email. Called
+   * from the public unsubscribe link in every email. The token is an HMAC
+   * of the email, so a link only works for its intended recipient.
+   */
+  async unsubscribe(email: string): Promise<{ success: boolean }> {
+    const normalized = normalizeEmail(email);
+    if (!normalized) return { success: false };
+    const contact = await this.prisma.contact.findUnique({ where: { email: normalized } });
+    if (contact && !contact.unsubscribed) {
+      await this.prisma.contact.update({
+        where: { id: contact.id },
+        data: { unsubscribed: true },
+      });
+      await this.prisma.contactEvent.create({
+        data: { contactId: contact.id, eventType: 'UNSUBSCRIBED', source: 'email' },
+      });
+    }
+    // Always report success so the link never reveals whether an email exists.
+    return { success: true };
+  }
 
   async subscribe(dto: SubscribeDto): Promise<SubscribeResult> {
     const email = normalizeEmail(dto.email);
@@ -133,9 +159,11 @@ export class PublicService {
    */
   private async dispatchWelcomeEmail(
     campaignId: string | null,
-    contact: { id: string; email: string | null; firstName: string | null },
+    contact: { id: string; email: string | null; firstName: string | null; unsubscribed?: boolean },
   ): Promise<boolean> {
     if (!contact.email) return false;
+    // Never email a contact who opted out.
+    if (contact.unsubscribed) return false;
 
     // Prefer the queue: it decouples the HTTP request from delivery and
     // gives us retries. Falls back to inline send when no queue is set.
@@ -156,6 +184,11 @@ export class PublicService {
     const outbound = renderCampaignEmail(campaign, {
       email: contact.email,
       firstName: contact.firstName,
+      unsubscribeUrl: buildUnsubscribeUrl(
+        this.env.PUBLIC_API_URL,
+        contact.email,
+        this.env.UNSUBSCRIBE_SECRET,
+      ),
     });
     if (!outbound) return false;
 

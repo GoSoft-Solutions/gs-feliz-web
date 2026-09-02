@@ -1,0 +1,80 @@
+=== PORTAL BUILD === 
+
+> @feliz/portal@0.1.0 build C:\Users\GoSoft Team\Documents\github\dev\clients\gs-feliz-web\apps\portal
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 10.1s
+   Linting and checking validity of types ...
+
+   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+   	- include was updated to add '.next/types/**/*.ts'
+
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ✓ Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      127 B         102 kB
+├ ○ /_not-found                            987 B         103 kB
+├ ○ /news                                2.28 kB         105 kB
+└ ƒ /news/[slug]                         2.28 kB         105 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/635-8d770860d36fa8fb.js       46.2 kB
+  ├ chunks/f625b344-4dca96ade7eb2f50.js  54.2 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+PORTAL_EXIT=0 
+=== ADMIN BUILD === 
+
+> @feliz/admin@0.1.0 build C:\Users\GoSoft Team\Documents\github\dev\clients\gs-feliz-web\apps\admin
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 32.2s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/12) ...
+   Generating static pages (3/12) 
+   Generating static pages (6/12) 
+   Generating static pages (9/12) 
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      928 B         103 kB
+├ ○ /_not-found                            987 B         103 kB
+├ ○ /dashboard                           1.91 kB         104 kB
+├ ○ /dashboard/analytics                   527 B         103 kB
+├ ○ /dashboard/campaigns                 4.24 kB         107 kB
+├ ○ /dashboard/contacts                   1.8 kB         104 kB
+├ ○ /dashboard/content                   2.98 kB         105 kB
+├ ○ /dashboard/courses                     559 B         103 kB
+├ ○ /dashboard/memberships                 668 B         103 kB
+└ ○ /dashboard/newsletter                1.79 kB         104 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/635-8d770860d36fa8fb.js       46.2 kB
+  ├ chunks/f625b344-4dca96ade7eb2f50.js  54.2 kB
+  └ other shared chunks (total)          1.99 kB
+
+
+○  (Static)  prerendered as static content
+
+ADMIN_EXIT=0 
+DONE 
