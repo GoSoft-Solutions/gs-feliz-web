@@ -1,3 +1,13 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/news",
+      "destination": "https://portal.danielcorral.com.mx/news"
+    },
+    {
+      "source": "/news/:path*",
+      "destination": "https://portal.danielcorral.com.mx/news/:path*"
+    }
+  ]
 }
