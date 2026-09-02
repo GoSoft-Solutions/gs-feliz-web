@@ -791,7 +791,7 @@ a { text-decoration: none; color: inherit; }
 .pil-img-stack {
   position: relative;
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 2/3;
   max-height: calc(100dvh - clamp(160px, 18vh, 220px));
   border-radius: var(--r-img);
   overflow: hidden;
@@ -803,7 +803,7 @@ a { text-decoration: none; color: inherit; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 65% 30%;
+  object-position: 60% 50%;
   opacity: 0;
   transition: opacity 600ms var(--ease);
 }
@@ -1240,49 +1240,28 @@ a { text-decoration: none; color: inherit; }
   to { opacity: 1; transform: translateX(0); }
 }
 
-.cs-collage {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.cs-hero-img {
   width: 100%;
   height: 100%;
-}
-
-.cs-col {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-height: 0;
-}
-
-.cs-tile {
-  border-radius: 14px;
+  border-radius: 20px;
   overflow: hidden;
-  background: var(--s2);
-  min-height: 0;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35);
 }
 
-.cs-tile img {
+.cs-hero-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
   transition: transform 600ms var(--ease);
+  transform: translateZ(0);
+  will-change: transform;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .cs-tile:hover img { transform: scale(1.05); }
+  .cs-hero-img:hover img { transform: scale(1.03); }
 }
-
-.cs-col--top .cs-tile--sm { flex: 1; }
-.cs-col--mid { flex: 1.5; align-items: stretch; }
-.cs-tile--lg { flex: 1.4; }
-.cs-col--mid-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-}
-.cs-tile--md { flex: 1; min-height: 0; }
-.cs-col--bot .cs-tile--sm { flex: 1; }
