@@ -39,7 +39,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @feliz/database exec prisma generate
 
+      # Lint is advisory for now: not every app has ESLint configured yet, so
+      # a lint failure should not block the pipeline. Typecheck/test/build below
+      # are the gates that must pass.
       - name: Lint
+        continue-on-error: true
         run: pnpm turbo run lint
 
       - name: Typecheck
