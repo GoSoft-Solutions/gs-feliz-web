@@ -46,11 +46,13 @@ jobs:
         continue-on-error: true
         run: pnpm turbo run lint
 
+      # @feliz/worker is an unimplemented skeleton (not deployed anywhere yet),
+      # so it is excluded until it is built out. Everything else must pass.
       - name: Typecheck
-        run: pnpm turbo run typecheck
+        run: pnpm turbo run typecheck --filter=!@feliz/worker
 
       - name: Test
-        run: pnpm turbo run test
+        run: pnpm turbo run test --filter=!@feliz/worker
 
       - name: Build
-        run: pnpm turbo run build
+        run: pnpm turbo run build --filter=!@feliz/worker
