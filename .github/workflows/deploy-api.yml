@@ -1,0 +1,126 @@
+name: Deploy API
+
+# Build the API Docker image, push it to ECR, and roll it out to Elastic
+# Beanstalk. Runs on pushes to main that touch the API or shared packages.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-api.yml"
+  # Allow a manual redeploy from the Actions tab without a code change.
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: gosoft-feliz-api
+  EB_APPLICATION: gosoft-feliz-eb-app
+  EB_ENVIRONMENT: gosoft-feliz-eb-env-api-prod
+  EB_DEPLOY_BUCKET: gosoft-feliz-eb-deploy-prod
+  HEALTH_URL: https://api.danielcorral.com.mx/health
+
+permissions:
+  id-token: write # required to request the OIDC token
+  contents: read
+
+jobs:
+  deploy:
+    name: Build, push and deploy to Elastic Beanstalk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPOSITORY"
+          SHA_TAG="${GITHUB_SHA::12}"
+          docker build -f apps/api/Dockerfile -t "$IMAGE:$SHA_TAG" -t "$IMAGE:latest" .
+          docker push "$IMAGE:$SHA_TAG"
+          docker push "$IMAGE:latest"
+          echo "image_uri=$IMAGE:$SHA_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create Elastic Beanstalk deployment bundle
+        id: bundle
+        env:
+          IMAGE_URI: ${{ steps.build.outputs.image_uri }}
+        run: |
+          VERSION="api-${GITHUB_SHA::12}-${GITHUB_RUN_NUMBER}"
+          sed "s|__IMAGE_URI__|$IMAGE_URI|g" apps/api/Dockerrun.aws.json.template > Dockerrun.aws.json
+          zip -q "$VERSION.zip" Dockerrun.aws.json
+          aws s3 cp "$VERSION.zip" "s3://$EB_DEPLOY_BUCKET/$VERSION.zip"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create application version
+        env:
+          VERSION: ${{ steps.bundle.outputs.version }}
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION" \
+            --version-label "$VERSION" \
+            --source-bundle "S3Bucket=$EB_DEPLOY_BUCKET,S3Key=$VERSION.zip" \
+            --description "GitHub Actions run $GITHUB_RUN_NUMBER ($GITHUB_SHA)"
+
+      - name: Deploy to environment
+        env:
+          VERSION: ${{ steps.bundle.outputs.version }}
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "$EB_ENVIRONMENT" \
+            --version-label "$VERSION"
+
+      - name: Wait for environment to be Ready and Green
+        run: |
+          echo "Waiting for Elastic Beanstalk to finish updating..."
+          for i in $(seq 1 40); do
+            read -r STATUS HEALTH VERSION_LABEL < <(aws elasticbeanstalk describe-environments \
+              --environment-names "$EB_ENVIRONMENT" \
+              --query "Environments[0].[Status,Health,VersionLabel]" \
+              --output text)
+            echo "  [$i] Status=$STATUS Health=$HEALTH Version=$VERSION_LABEL"
+            if [ "$STATUS" = "Ready" ] && [ "$HEALTH" = "Green" ]; then
+              echo "Environment is Ready and Green."
+              exit 0
+            fi
+            if [ "$STATUS" = "Ready" ] && [ "$HEALTH" = "Red" ]; then
+              echo "::error::Environment went Red after deploy."
+              exit 1
+            fi
+            sleep 15
+          done
+          echo "::error::Timed out waiting for the environment to become Ready/Green."
+          exit 1
+
+      - name: Health check
+        run: |
+          echo "Probing $HEALTH_URL ..."
+          for i in $(seq 1 10); do
+            CODE=$(curl -s -o /tmp/health.json -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "Health OK: $(cat /tmp/health.json)"
+              exit 0
+            fi
+            echo "  [$i] HTTP $CODE, retrying..."
+            sleep 10
+          done
+          echo "::error::Health check did not return 200."
+          exit 1
