@@ -46,13 +46,15 @@ jobs:
         continue-on-error: true
         run: pnpm turbo run lint
 
-      # @feliz/worker is an unimplemented skeleton (not deployed anywhere yet),
-      # so it is excluded until it is built out. Everything else must pass.
+      # Build first so workspace packages (@feliz/config, @feliz/database,
+      # @feliz/shared-types) emit their dist/ type declarations. The API's
+      # typecheck imports those built types, so it must run after the build.
+      # @feliz/worker is an unimplemented skeleton (not deployed yet) — excluded.
+      - name: Build
+        run: pnpm turbo run build --filter=!@feliz/worker
+
       - name: Typecheck
         run: pnpm turbo run typecheck --filter=!@feliz/worker
 
       - name: Test
         run: pnpm turbo run test --filter=!@feliz/worker
-
-      - name: Build
-        run: pnpm turbo run build --filter=!@feliz/worker
