@@ -106,18 +106,23 @@ export class PublicService {
       // Record where this signup came from. Keyed on (provider, external_id);
       // we use the contact id as the external id so re-subscribing through
       // the same page updates the row instead of duplicating it.
+      // The displayed "source" (FUENTE) is the campaign's own source field
+      // (e.g. "Instagram"). Fall back to the slug, then to "news" for the
+      // generic /news signup with no campaign.
+      const sourceLabel = campaign?.source ?? campaign?.slug ?? 'news';
+
       await tx.contactSource.upsert({
         where: { provider_externalId: { provider: PROVIDER, externalId: existing.id } },
         create: {
           contactId: existing.id,
           provider: PROVIDER,
           externalId: existing.id,
-          source: campaign?.slug ?? 'news',
+          source: sourceLabel,
           campaignId: campaign?.id,
           metadata: {} as Prisma.InputJsonValue,
         },
         update: {
-          source: campaign?.slug ?? 'news',
+          source: sourceLabel,
           campaignId: campaign?.id ?? undefined,
         },
       });
@@ -127,7 +132,7 @@ export class PublicService {
           contactId: existing.id,
           eventType: isNew ? 'LEAD_CREATED' : 'CONTACT_UPDATED',
           campaignId: campaign?.id,
-          source: campaign?.slug ?? 'news',
+          source: sourceLabel,
           metadata: { provider: PROVIDER },
         },
       });

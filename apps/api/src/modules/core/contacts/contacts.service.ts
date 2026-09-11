@@ -59,6 +59,14 @@ export class ContactsService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
+        // Include the signup source(s) and the related campaign so the admin
+        // list can show FUENTE (e.g. "Instagram") and the campaign name.
+        include: {
+          sources: {
+            orderBy: { createdAt: 'desc' },
+            include: { campaign: { select: { id: true, name: true, slug: true, source: true } } },
+          },
+        },
       }),
       this.prisma.contact.count({ where }),
     ]);
@@ -75,7 +83,12 @@ export class ContactsService {
   async findOne(id: string) {
     const contact = await this.prisma.contact.findUnique({
       where: { id },
-      include: { sources: true },
+      include: {
+        sources: {
+          orderBy: { createdAt: 'desc' },
+          include: { campaign: { select: { id: true, name: true, slug: true, source: true } } },
+        },
+      },
     });
 
     if (!contact) {

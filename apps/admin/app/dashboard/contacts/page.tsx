@@ -11,6 +11,10 @@ function sourceLabel(c: Contact): string {
   return c.sources?.[0]?.source || '-';
 }
 
+function campaignLabel(c: Contact): string {
+  return c.sources?.[0]?.campaign?.name || '-';
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,14 +66,15 @@ export default function ContactsPage() {
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Fuente</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Campana</th>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-400">Cargando...</td></tr>
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-400">Cargando...</td></tr>
             ) : contacts.length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-400">Sin contactos todavia.</td></tr>
+              <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-400">Sin contactos todavia.</td></tr>
             ) : (
               contacts.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50">
@@ -77,6 +82,7 @@ export default function ContactsPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
                   <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-50 text-yellow-700 rounded">{c.status}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{sourceLabel(c)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{campaignLabel(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(c.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                 </tr>
               ))

@@ -51,6 +51,12 @@ export interface ContactSource {
   provider: string;
   source: string | null;
   campaignId: string | null;
+  campaign?: {
+    id: string;
+    name: string;
+    slug: string;
+    source: string | null;
+  } | null;
 }
 
 export interface Paginated<T> {
