@@ -100,6 +100,7 @@ export const contactsApi = {
     request<Paginated<Contact>>(
       `/contacts?pageSize=100${search ? `&search=${encodeURIComponent(search)}` : ''}`,
     ),
+  remove: (id: string) => request<{ success: boolean }>(`/contacts/${id}`, { method: 'DELETE' }),
 };
 
 // ---- Campaigns ----

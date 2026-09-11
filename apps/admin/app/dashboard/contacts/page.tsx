@@ -34,6 +34,18 @@ export default function ContactsPage() {
     }
   };
 
+  const remove = async (c: Contact) => {
+    const label = fullName(c) === '(sin nombre)' ? c.email : fullName(c);
+    if (!window.confirm(`Eliminar el contacto "${label}"? Esta accion no se puede deshacer.`)) return;
+    setError('');
+    try {
+      await contactsApi.remove(c.id);
+      setContacts((prev) => prev.filter((x) => x.id !== c.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al eliminar el contacto');
+    }
+  };
+
   useEffect(() => {
     void load();
   }, []);
@@ -68,13 +80,14 @@ export default function ContactsPage() {
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Fuente</th>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Campana</th>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
+              <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-400">Cargando...</td></tr>
+              <tr><td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-400">Cargando...</td></tr>
             ) : contacts.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-400">Sin contactos todavia.</td></tr>
+              <tr><td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-400">Sin contactos todavia.</td></tr>
             ) : (
               contacts.map((c) => (
                 <tr key={c.id} className="hover:bg-gray-50">
@@ -84,6 +97,14 @@ export default function ContactsPage() {
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{sourceLabel(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{campaignLabel(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(c.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => void remove(c)}
+                      className="text-sm text-red-600 hover:text-red-800 font-medium"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
                 </tr>
               ))
             )}

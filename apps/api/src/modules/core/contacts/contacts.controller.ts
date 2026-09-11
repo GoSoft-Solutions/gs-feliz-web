@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
@@ -49,5 +49,12 @@ export class ContactsController {
   @ApiOperation({ summary: "List a contact's event history" })
   findEvents(@Param('id', ParseUUIDPipe) id: string): ContactsServiceReturn<'findEvents'> {
     return this.contactsService.findEvents(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a contact and its sources/events' })
+  remove(@Param('id', ParseUUIDPipe) id: string): ContactsServiceReturn<'remove'> {
+    return this.contactsService.remove(id);
   }
 }

@@ -131,4 +131,20 @@ export class ContactsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  /**
+   * Permanently deletes a contact and its related sources/events. Used from
+   * the admin to clean up test or unwanted contacts. Irreversible.
+   */
+  async remove(id: string): Promise<{ success: true }> {
+    await this.findOne(id);
+
+    await this.prisma.$transaction([
+      this.prisma.contactEvent.deleteMany({ where: { contactId: id } }),
+      this.prisma.contactSource.deleteMany({ where: { contactId: id } }),
+      this.prisma.contact.delete({ where: { id } }),
+    ]);
+
+    return { success: true };
+  }
 }
