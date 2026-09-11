@@ -101,6 +101,11 @@ export const contactsApi = {
       `/contacts?pageSize=100${search ? `&search=${encodeURIComponent(search)}` : ''}`,
     ),
   remove: (id: string) => request<{ success: boolean }>(`/contacts/${id}`, { method: 'DELETE' }),
+  sendEmail: (id: string, data: { subject: string; html: string; fromName?: string }) =>
+    request<{ success: boolean }>(`/contacts/${id}/email`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // ---- Campaigns ----

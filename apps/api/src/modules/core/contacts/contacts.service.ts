@@ -1,14 +1,23 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@feliz/database';
+import type { EnvConfig } from '@feliz/config';
+import { ENV_CONFIG } from '../../../config/app-config.module';
 import { PrismaService } from '../../../database/prisma.service';
+import { EmailService } from '../../email/email.service';
+import { buildUnsubscribeUrl } from '../../email/unsubscribe.util';
 import { normalizeEmail } from '../../../common/utils/normalize-email.util';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ListContactsQueryDto } from './dto/list-contacts-query.dto';
+import { SendContactEmailDto } from './dto/send-email.dto';
 
 @Injectable()
 export class ContactsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly email: EmailService,
+    @Inject(ENV_CONFIG) private readonly env: EnvConfig,
+  ) {}
 
   /**
    * Creates a new Contact. Always normalizes the email before writing so
@@ -144,6 +153,50 @@ export class ContactsService {
       this.prisma.contactSource.deleteMany({ where: { contactId: id } }),
       this.prisma.contact.delete({ where: { id } }),
     ]);
+
+    return { success: true };
+  }
+
+  /**
+   * Sends a one-off personalized email to a single contact from the admin.
+   * Respects unsubscribe status and appends the unsubscribe footer, and
+   * records an EMAIL_SENT event. Supports {{nombre}} / {{email}} tokens.
+   */
+  async sendCustomEmail(id: string, dto: SendContactEmailDto): Promise<{ success: true }> {
+    const contact = await this.prisma.contact.findUnique({ where: { id } });
+    if (!contact) throw new NotFoundException(`Contact "${id}" not found`);
+    if (!contact.email) throw new BadRequestException('This contact has no email address');
+    if (contact.unsubscribed) throw new BadRequestException('This contact is unsubscribed');
+
+    const tokens: Record<string, string> = {
+      nombre: contact.firstName?.trim() || 'Hola',
+      email: contact.email,
+    };
+    const applyTokens = (t: string) =>
+      t.replace(/\{\{\s*(nombre|email)\s*\}\}/g, (_m, k: string) => tokens[k] ?? '');
+
+    const unsubscribeUrl = buildUnsubscribeUrl(
+      this.env.PUBLIC_API_URL,
+      contact.email,
+      this.env.UNSUBSCRIBE_SECRET,
+    );
+    const footer = `<hr style="margin-top:32px;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;text-align:center;margin-top:16px">Recibes este correo porque te suscribiste en danielcorral.com.mx.<br/><a href="${unsubscribeUrl}" style="color:#888">Cancelar suscripción</a></p>`;
+
+    await this.email.send({
+      to: contact.email,
+      subject: applyTokens(dto.subject),
+      html: `${applyTokens(dto.html)}${footer}`,
+      fromName: dto.fromName,
+    });
+
+    await this.prisma.contactEvent.create({
+      data: {
+        contactId: contact.id,
+        eventType: 'EMAIL_SENT',
+        source: 'admin',
+        metadata: { subject: applyTokens(dto.subject), manual: true },
+      },
+    });
 
     return { success: true };
   }

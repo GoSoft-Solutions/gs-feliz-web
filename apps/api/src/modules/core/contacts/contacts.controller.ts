@@ -4,6 +4,7 @@ import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ListContactsQueryDto } from './dto/list-contacts-query.dto';
+import { SendContactEmailDto } from './dto/send-email.dto';
 
 // Explicit return types below work around TS2742 ("inferred type cannot
 // be named without a reference to .../@prisma/client/runtime/library"),
@@ -56,5 +57,15 @@ export class ContactsController {
   @ApiOperation({ summary: 'Delete a contact and its sources/events' })
   remove(@Param('id', ParseUUIDPipe) id: string): ContactsServiceReturn<'remove'> {
     return this.contactsService.remove(id);
+  }
+
+  @Post(':id/email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a personalized one-off email to a contact' })
+  sendEmail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SendContactEmailDto,
+  ): ContactsServiceReturn<'sendCustomEmail'> {
+    return this.contactsService.sendCustomEmail(id, dto);
   }
 }
