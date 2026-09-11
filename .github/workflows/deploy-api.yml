@@ -88,17 +88,22 @@ jobs:
             --environment-name "$EB_ENVIRONMENT" \
             --version-label "$VERSION"
 
-      - name: Wait for environment to be Ready and Green
+      - name: Wait for environment to run the new version (Ready + Green)
+        env:
+          VERSION: ${{ steps.bundle.outputs.version }}
         run: |
-          echo "Waiting for Elastic Beanstalk to finish updating..."
+          echo "Waiting for Elastic Beanstalk to deploy version $VERSION ..."
           for i in $(seq 1 40); do
             read -r STATUS HEALTH VERSION_LABEL < <(aws elasticbeanstalk describe-environments \
               --environment-names "$EB_ENVIRONMENT" \
               --query "Environments[0].[Status,Health,VersionLabel]" \
               --output text)
             echo "  [$i] Status=$STATUS Health=$HEALTH Version=$VERSION_LABEL"
-            if [ "$STATUS" = "Ready" ] && [ "$HEALTH" = "Green" ]; then
-              echo "Environment is Ready and Green."
+            # Only success when the environment is Ready/Green AND actually
+            # running the version we just deployed — otherwise a Green on the
+            # OLD version would falsely pass.
+            if [ "$STATUS" = "Ready" ] && [ "$HEALTH" = "Green" ] && [ "$VERSION_LABEL" = "$VERSION" ]; then
+              echo "Environment is Ready and Green on $VERSION."
               exit 0
             fi
             if [ "$STATUS" = "Ready" ] && [ "$HEALTH" = "Red" ]; then
@@ -107,7 +112,7 @@ jobs:
             fi
             sleep 15
           done
-          echo "::error::Timed out waiting for the environment to become Ready/Green."
+          echo "::error::Timed out waiting for the environment to run $VERSION (Ready/Green)."
           exit 1
 
       - name: Health check
