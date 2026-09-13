@@ -246,7 +246,7 @@ export default function CampaignsPage() {
             {(form.emailSubject || form.emailHtml) && (
               <div>
                 <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Previsualizacion</h4>
-                <div className="max-w-md mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div>
+                <div className="max-w-2xl mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div>
               </div>
             )}
             <div className="flex gap-3 pt-4 border-t border-gray-100">
