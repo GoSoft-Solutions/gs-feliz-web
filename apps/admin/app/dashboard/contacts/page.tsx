@@ -23,6 +23,16 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
+function HistoryIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 // --- Inline icons (no extra dependency) ---
 function TrashIcon() {
   return (
@@ -235,8 +245,10 @@ export default function ContactsPage() {
                           title="Ver historial de campañas"
                           aria-label="Ver historial de campañas"
                           aria-expanded={expandedContacts.has(c.id)}
-                          className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded transition"
+                          className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition"
                         >
+                          <HistoryIcon />
+                          <span>{c.sources.length}</span>
                           <ChevronIcon expanded={expandedContacts.has(c.id)} />
                         </button>
                       )}
@@ -272,16 +284,21 @@ export default function ContactsPage() {
                   </td>
                 </tr>
                 {expandedContacts.has(c.id) && (
-                  <tr className="bg-gray-50/70">
+                  <tr className="bg-slate-50/80">
                     <td colSpan={7} className="px-6 pb-4 pt-0">
-                      <div className="ml-[calc(25%+0.5rem)] border-l-2 border-gray-200 pl-4">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Historial de campañas</p>
-                        <div className="space-y-2">
+                      <div className="ml-[calc(25%+0.5rem)] border-l-2 border-gray-200 pl-5 pt-3">
+                        <div className="flex items-center gap-2 mb-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Historial de campañas</p>
+                          <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] text-gray-500">{c.sources?.length ?? 0} registros</span>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
                           {(c.sources ?? []).map((source) => (
-                            <div key={source.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600">
-                              <span className="font-medium text-gray-800">{source.campaign?.name ?? '-'}</span>
-                              <span>{source.source ?? '-'}</span>
-                              <span className="text-xs text-gray-400">{new Date(source.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            <div key={source.id} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
+                              <div className="flex items-start justify-between gap-3">
+                                <span className="text-sm font-semibold text-gray-800">{source.campaign?.name ?? '-'}</span>
+                                <span className="shrink-0 text-[11px] text-gray-400">{new Date(source.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                              </div>
+                              <span className="mt-1 block text-xs text-gray-500">{source.source ?? '-'}</span>
                             </div>
                           ))}
                         </div>

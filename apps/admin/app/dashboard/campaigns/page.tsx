@@ -25,7 +25,7 @@ const CTA_MARKER = '<!--cta-->';
 function composeHtml(body: string, cta: string, ctaUrl: string): string {
   const clean = body.split(CTA_MARKER)[0];
   if (!cta) return clean;
-  return `${clean}${CTA_MARKER}<p style="text-align:center;margin-top:24px"><a href="${ctaUrl || '#'}" style="display:inline-block;padding:12px 28px;background:#F4711A;color:#fff;font-weight:600;border-radius:8px;text-decoration:none">${cta}</a></p>`;
+  return `${clean}${CTA_MARKER}<p style="text-align:center;margin:40px 0 0"><a href="${ctaUrl || '#'}" style="display:inline-block;padding:12px 28px;background:#F4711A;color:#fff;font-weight:600;border-radius:8px;text-decoration:none">${cta}</a></p>`;
 }
 
 /** Splits stored html back into body + cta for editing. */
@@ -93,24 +93,22 @@ function RichEditor({ value, onChange }: { value: string; onChange: (v: string) 
   );
 }
 
-function EmailPreview({ subject, html, cta, ctaUrl }: { subject: string; html: string; cta: string; ctaUrl: string }) {
+function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl: string }) {
   const previewHtml = html.replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="bg-gray-900 px-8 py-5 text-center">
-        <h2 className="text-white text-xl font-bold tracking-widest">DANIEL CORRAL</h2>
-      </div>
-      <div className="bg-white px-8 py-8">
-        {subject && <p className="text-xs text-gray-400 mb-4 uppercase tracking-wide">Asunto: {subject}</p>}
-        <div className="prose prose-sm max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+    <div className="bg-[#f3f4f6] p-3 sm:p-6 border border-gray-200 rounded-xl">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
+        <div className="bg-gray-900 px-6 py-7 text-center">
+          <h2 className="text-white text-xl font-bold tracking-[0.25em]">DANIEL CORRAL</h2>
+        </div>
+        <div className="bg-white px-6 sm:px-8 pt-8 pb-11">
+          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewHtml }} />
         {cta && (
-          <div className="mt-8 text-center">
+          <div className="mt-10 text-center">
             <a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a>
           </div>
         )}
-      </div>
-      <div className="bg-gray-50 px-6 py-4 text-center border-t border-gray-100">
-        <p className="text-xs text-gray-400">danielcorral.com.mx &middot; Cancelar suscripcion</p>
+        </div>
       </div>
     </div>
   );
@@ -266,7 +264,7 @@ export default function CampaignsPage() {
             {(form.emailSubject || form.emailHtml) && (
               <div>
                 <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Previsualizacion</h4>
-                <div className="max-w-md mx-auto"><EmailPreview subject={form.emailSubject} html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div>
+                <div className="max-w-md mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div>
               </div>
             )}
             <div className="flex gap-3 pt-4 border-t border-gray-100">
@@ -287,7 +285,7 @@ export default function CampaignsPage() {
               </div>
               <button onClick={() => setPreviewId(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400">x</button>
             </div>
-            <div className="p-4"><EmailPreview subject="" html={previewDecomposed.body} cta={previewDecomposed.cta} ctaUrl={previewDecomposed.ctaUrl} /></div>
+            <div className="p-4"><EmailPreview html={previewDecomposed.body} cta={previewDecomposed.cta} ctaUrl={previewDecomposed.ctaUrl} /></div>
           </div>
         </div>
       )}
@@ -311,7 +309,7 @@ export default function CampaignsPage() {
                     <div><label className="block text-sm text-gray-600 mb-1">Boton</label><input value={form.emailCta} onChange={(e) => setForm({ ...form, emailCta: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
                     <div><label className="block text-sm text-gray-600 mb-1">URL del boton</label><input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
                   </div>
-                  {form.emailHtml && <div><h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Previsualizacion</h4><div className="max-w-md mx-auto"><EmailPreview subject={form.emailSubject} html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div></div>}
+                  {form.emailHtml && <div><h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Previsualizacion</h4><div className="max-w-md mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div></div>}
                   <div className="flex gap-2 pt-2">
                     <button onClick={() => handleUpdate(campaign.id)} disabled={busy} className="px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar'}</button>
                     <button onClick={() => setEditId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg">Cancelar</button>

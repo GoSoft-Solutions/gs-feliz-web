@@ -60,13 +60,8 @@ function buildEmailDocument(body: string): string {
               </td>
             </tr>
             <tr>
-              <td style="padding:36px 32px;font-size:16px;line-height:1.7;color:#374151">
+              <td style="padding:36px 32px 44px;font-size:16px;line-height:1.7;color:#374151">
                 ${body}
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:18px 24px;background:#f9fafb;border-top:1px solid #f3f4f6;color:#9ca3af;font-size:12px;line-height:1.5">
-                danielcorral.com.mx
               </td>
             </tr>
           </table>
