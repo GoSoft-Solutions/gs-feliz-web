@@ -80,6 +80,9 @@ export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string;
           <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewHtml }} />
           {cta && <div className="mt-10 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
         </div>
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-center text-xs leading-relaxed text-gray-400">
+          danielcorral.com.mx
+        </div>
       </div>
     </div>
   );
