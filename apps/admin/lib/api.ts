@@ -51,6 +51,7 @@ export interface ContactSource {
   provider: string;
   source: string | null;
   campaignId: string | null;
+  createdAt: string;
   campaign?: {
     id: string;
     name: string;
@@ -100,6 +101,11 @@ export const contactsApi = {
     request<Paginated<Contact>>(
       `/contacts?pageSize=100${search ? `&search=${encodeURIComponent(search)}` : ''}`,
     ),
+  update: (id: string, data: Partial<Pick<Contact, 'email' | 'firstName' | 'lastName' | 'phone' | 'status'>>) =>
+    request<Contact>(`/contacts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
   remove: (id: string) => request<{ success: boolean }>(`/contacts/${id}`, { method: 'DELETE' }),
   sendEmail: (id: string, data: { subject: string; html: string; fromName?: string }) =>
     request<{ success: boolean }>(`/contacts/${id}/email`, {

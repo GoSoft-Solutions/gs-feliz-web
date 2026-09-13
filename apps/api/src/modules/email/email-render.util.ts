@@ -10,8 +10,6 @@ export interface CampaignEmailSource {
 export interface SubscriberContext {
   email: string;
   firstName?: string | null;
-  /** Full unsubscribe URL for this recipient; appended as an email footer. */
-  unsubscribeUrl?: string;
 }
 
 /**
@@ -21,8 +19,7 @@ export interface SubscriberContext {
  * sending rather than deliver a blank message.
  *
  * Supported template tokens (case-sensitive), substituted in both subject
- * and body: {{nombre}} and {{email}}. An unsubscribe footer is appended
- * when unsubscribeUrl is provided (required for compliant bulk email).
+ * and body: {{nombre}} and {{email}}.
  */
 export function renderCampaignEmail(
   campaign: CampaignEmailSource,
@@ -38,10 +35,7 @@ export function renderCampaignEmail(
   };
 
   const body = applyTokens(campaign.emailHtml, tokens);
-  const html = buildEmailDocument(
-    body,
-    subscriber.unsubscribeUrl ? unsubscribeFooter(subscriber.unsubscribeUrl) : '',
-  );
+  const html = buildEmailDocument(body);
 
   return {
     to: subscriber.email,
@@ -52,11 +46,7 @@ export function renderCampaignEmail(
   };
 }
 
-function unsubscribeFooter(url: string): string {
-  return `<hr style="margin-top:32px;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;text-align:center;margin-top:16px">Recibes este correo porque te suscribiste en danielcorral.com.mx.<br/><a href="${url}" style="color:#888">Cancelar suscripción</a></p>`;
-}
-
-function buildEmailDocument(body: string, footer: string): string {
+function buildEmailDocument(body: string): string {
   return `<!doctype html>
 <html lang="es">
   <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#374151">
@@ -72,7 +62,6 @@ function buildEmailDocument(body: string, footer: string): string {
             <tr>
               <td style="padding:36px 32px;font-size:16px;line-height:1.7;color:#374151">
                 ${body}
-                ${footer}
               </td>
             </tr>
             <tr>

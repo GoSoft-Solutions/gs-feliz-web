@@ -1,13 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@feliz/database';
-import type { EnvConfig } from '@feliz/config';
-import { ENV_CONFIG } from '../../config/app-config.module';
 import { PrismaService } from '../../database/prisma.service';
 import { normalizeEmail } from '../../common/utils/normalize-email.util';
 import { EmailService } from '../email/email.service';
 import { QueuePublisherService } from '../email/queue-publisher.service';
 import { renderCampaignEmail } from '../email/email-render.util';
-import { buildUnsubscribeUrl } from '../email/unsubscribe.util';
 import { SubscribeDto } from './dto/subscribe.dto';
 
 const PROVIDER = 'LANDING';
@@ -41,7 +38,6 @@ export class PublicService {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
     private readonly queue: QueuePublisherService,
-    @Inject(ENV_CONFIG) private readonly env: EnvConfig,
   ) {}
 
   /**
@@ -103,29 +99,34 @@ export class PublicService {
         });
       }
 
-      // Record where this signup came from. Keyed on (provider, external_id);
-      // we use the contact id as the external id so re-subscribing through
-      // the same page updates the row instead of duplicating it.
+      // Keep one landing source per campaign so the same contact can belong
+      // to multiple campaigns while repeat submissions stay idempotent.
       // The displayed "source" (FUENTE) is the campaign's own source field
       // (e.g. "Instagram"). Fall back to the slug, then to "news" for the
       // generic /news signup with no campaign.
       const sourceLabel = campaign?.source ?? campaign?.slug ?? 'news';
 
-      await tx.contactSource.upsert({
-        where: { provider_externalId: { provider: PROVIDER, externalId: existing.id } },
-        create: {
-          contactId: existing.id,
-          provider: PROVIDER,
-          externalId: existing.id,
-          source: sourceLabel,
-          campaignId: campaign?.id,
-          metadata: {} as Prisma.InputJsonValue,
-        },
-        update: {
-          source: sourceLabel,
-          campaignId: campaign?.id ?? undefined,
-        },
+      const existingSource = await tx.contactSource.findFirst({
+        where: { contactId: existing.id, provider: PROVIDER, campaignId: campaign?.id ?? null },
       });
+
+      if (existingSource) {
+        await tx.contactSource.update({
+          where: { id: existingSource.id },
+          data: { source: sourceLabel },
+        });
+      } else {
+        await tx.contactSource.create({
+          data: {
+            contactId: existing.id,
+            provider: PROVIDER,
+            externalId: `${existing.id}:${campaign?.id ?? 'generic'}`,
+            source: sourceLabel,
+            campaignId: campaign?.id,
+            metadata: {} as Prisma.InputJsonValue,
+          },
+        });
+      }
 
       await tx.contactEvent.create({
         data: {
@@ -189,11 +190,6 @@ export class PublicService {
     const outbound = renderCampaignEmail(campaign, {
       email: contact.email,
       firstName: contact.firstName,
-      unsubscribeUrl: buildUnsubscribeUrl(
-        this.env.PUBLIC_API_URL,
-        contact.email,
-        this.env.UNSUBSCRIBE_SECRET,
-      ),
     });
     if (!outbound) return false;
 

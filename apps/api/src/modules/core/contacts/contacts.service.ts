@@ -1,10 +1,7 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@feliz/database';
-import type { EnvConfig } from '@feliz/config';
-import { ENV_CONFIG } from '../../../config/app-config.module';
 import { PrismaService } from '../../../database/prisma.service';
 import { EmailService } from '../../email/email.service';
-import { buildUnsubscribeUrl } from '../../email/unsubscribe.util';
 import { normalizeEmail } from '../../../common/utils/normalize-email.util';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
@@ -16,7 +13,6 @@ export class ContactsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
-    @Inject(ENV_CONFIG) private readonly env: EnvConfig,
   ) {}
 
   /**
@@ -159,8 +155,7 @@ export class ContactsService {
 
   /**
    * Sends a one-off personalized email to a single contact from the admin.
-   * Respects unsubscribe status and appends the unsubscribe footer, and
-   * records an EMAIL_SENT event. Supports {{nombre}} / {{email}} tokens.
+  * Respects unsubscribe status and records an EMAIL_SENT event.
    */
   async sendCustomEmail(id: string, dto: SendContactEmailDto): Promise<{ success: true }> {
     const contact = await this.prisma.contact.findUnique({ where: { id } });
@@ -175,17 +170,10 @@ export class ContactsService {
     const applyTokens = (t: string) =>
       t.replace(/\{\{\s*(nombre|email)\s*\}\}/g, (_m, k: string) => tokens[k] ?? '');
 
-    const unsubscribeUrl = buildUnsubscribeUrl(
-      this.env.PUBLIC_API_URL,
-      contact.email,
-      this.env.UNSUBSCRIBE_SECRET,
-    );
-    const footer = `<hr style="margin-top:32px;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;text-align:center;margin-top:16px">Recibes este correo porque te suscribiste en danielcorral.com.mx.<br/><a href="${unsubscribeUrl}" style="color:#888">Cancelar suscripción</a></p>`;
-
     await this.email.send({
       to: contact.email,
       subject: applyTokens(dto.subject),
-      html: `${applyTokens(dto.html)}${footer}`,
+      html: applyTokens(dto.html),
       fromName: dto.fromName,
     });
 

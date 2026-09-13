@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { contactsApi, type Contact } from '../../../lib/api';
 
 function fullName(c: Contact): string {
@@ -13,6 +13,14 @@ function sourceLabel(c: Contact): string {
 
 function campaignLabel(c: Contact): string {
   return c.sources?.[0]?.campaign?.name || '-';
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={expanded ? 'm6 9 6 6 6-6' : 'm9 6 6 6-6 6'} />
+    </svg>
+  );
 }
 
 // --- Inline icons (no extra dependency) ---
@@ -35,11 +43,26 @@ function MailIcon() {
   );
 }
 
+function EditIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
+
+  // Contact editor modal state
+  const [editTarget, setEditTarget] = useState<Contact | null>(null);
+  const [editForm, setEditForm] = useState({ email: '', firstName: '', lastName: '', phone: '', status: 'LEAD' });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Email composer modal state
   const [emailTarget, setEmailTarget] = useState<Contact | null>(null);
@@ -78,6 +101,50 @@ export default function ContactsPage() {
     setSubject('');
     setBody('');
     setError('');
+  };
+
+  const openEdit = (c: Contact) => {
+    setEditTarget(c);
+    setEditForm({
+      email: c.email ?? '',
+      firstName: c.firstName ?? '',
+      lastName: c.lastName ?? '',
+      phone: c.phone ?? '',
+      status: c.status,
+    });
+    setError('');
+  };
+
+  const saveEdit = async () => {
+    if (!editTarget) return;
+    setSavingEdit(true);
+    setError('');
+    try {
+      const updated = await contactsApi.update(editTarget.id, {
+        email: editForm.email.trim() || undefined,
+        firstName: editForm.firstName.trim() || undefined,
+        lastName: editForm.lastName.trim() || undefined,
+        phone: editForm.phone.trim() || undefined,
+        status: editForm.status,
+      });
+      setContacts((current) => current.map((contact) => contact.id === updated.id ? { ...contact, ...updated } : contact));
+      setEditTarget(null);
+      setToast('Contacto actualizado');
+      setTimeout(() => setToast(''), 4000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al actualizar el contacto');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const toggleHistory = (id: string) => {
+    setExpandedContacts((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const sendEmail = async () => {
@@ -152,15 +219,40 @@ export default function ContactsPage() {
               <tr><td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-400">Sin contactos todavia.</td></tr>
             ) : (
               contacts.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50">
+                <Fragment key={c.id}>
+                <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{fullName(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
                   <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-50 text-yellow-700 rounded">{c.status}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{sourceLabel(c)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{campaignLabel(c)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span>{campaignLabel(c)}</span>
+                      {!!c.sources?.length && (
+                        <button
+                          type="button"
+                          onClick={() => toggleHistory(c.id)}
+                          title="Ver historial de campañas"
+                          aria-label="Ver historial de campañas"
+                          aria-expanded={expandedContacts.has(c.id)}
+                          className="p-1 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded transition"
+                        >
+                          <ChevronIcon expanded={expandedContacts.has(c.id)} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500">{new Date(c.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => openEdit(c)}
+                        title="Editar contacto"
+                        aria-label="Editar contacto"
+                        className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+                      >
+                        <EditIcon />
+                      </button>
                       <button
                         onClick={() => openEmail(c)}
                         title="Enviar correo personalizado"
@@ -179,6 +271,25 @@ export default function ContactsPage() {
                     </div>
                   </td>
                 </tr>
+                {expandedContacts.has(c.id) && (
+                  <tr className="bg-gray-50/70">
+                    <td colSpan={7} className="px-6 pb-4 pt-0">
+                      <div className="ml-[calc(25%+0.5rem)] border-l-2 border-gray-200 pl-4">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Historial de campañas</p>
+                        <div className="space-y-2">
+                          {(c.sources ?? []).map((source) => (
+                            <div key={source.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600">
+                              <span className="font-medium text-gray-800">{source.campaign?.name ?? '-'}</span>
+                              <span>{source.source ?? '-'}</span>
+                              <span className="text-xs text-gray-400">{new Date(source.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))
             )}
           </tbody>
@@ -216,7 +327,7 @@ export default function ContactsPage() {
                   placeholder="Escribe tu mensaje... Puedes usar {{nombre}} para personalizar."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm resize-y"
                 />
-                <p className="text-xs text-gray-400 mt-1">Consejo: usa {'{{nombre}}'} y {'{{email}}'} para personalizar. Se agrega un pie con la opcion de baja automaticamente.</p>
+                <p className="text-xs text-gray-400 mt-1">Consejo: usa {'{{nombre}}'} y {'{{email}}'} para personalizar.</p>
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
@@ -233,6 +344,55 @@ export default function ContactsPage() {
                 className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
               >
                 {sending ? 'Enviando...' : 'Enviar correo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-800">Editar contacto</h2>
+              <button onClick={() => setEditTarget(null)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Nombre</label>
+                  <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Apellido</label>
+                  <input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Email</label>
+                <input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Telefono</label>
+                  <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Status</label>
+                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm">
+                    <option value="LEAD">LEAD</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="CUSTOMER">CUSTOMER</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
+                </div>
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+            </div>
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+              <button onClick={() => setEditTarget(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
+              <button onClick={() => void saveEdit()} disabled={savingEdit} className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50">
+                {savingEdit ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
           </div>
