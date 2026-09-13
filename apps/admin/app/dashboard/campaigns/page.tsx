@@ -234,12 +234,13 @@ export default function CampaignsPage() {
 
   const previewCampaign = campaigns.find((c) => c.id === previewId);
   const previewDecomposed = previewCampaign ? decompose(previewCampaign.emailHtml) : null;
+  const editCampaign = campaigns.find((c) => c.id === editId);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Campanas</h1>
-        {!showCreate && <button onClick={() => { setForm(emptyForm); setShowCreate(true); }} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm">+ Nueva Campana</button>}
+        {!showCreate && !editId && <button onClick={() => { setForm(emptyForm); setShowCreate(true); }} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm">+ Nueva Campana</button>}
       </div>
 
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
@@ -305,6 +306,62 @@ export default function CampaignsPage() {
         </div>
       )}
 
+      {editCampaign && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div>
+              <h3 className="font-semibold text-gray-800">Editar campaña</h3>
+              <p className="text-sm text-gray-500 mt-1">Actualiza el contenido sin perder el espacio de edición.</p>
+            </div>
+            <button type="button" onClick={() => setEditId(null)} className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">Cancelar</button>
+          </div>
+          <div className="p-6 space-y-6">
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Información</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Nombre</label>
+                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Asunto</label>
+                  <input value={form.emailSubject} onChange={(e) => setForm({ ...form, emailSubject: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Correo de la campaña</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Contenido</label>
+                  <RichEditor key={`edit-${editCampaign.id}`} value={form.emailHtml} onChange={(v) => setForm({ ...form, emailHtml: v })} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Botón (CTA)</label>
+                    <input value={form.emailCta} onChange={(e) => setForm({ ...form, emailCta: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">URL del botón</label>
+                    <input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {form.emailHtml && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">Previsualización</h4>
+                <div className="max-w-xl mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div>
+              </div>
+            )}
+            <div className="flex gap-3 pt-4 border-t border-gray-100">
+              <button onClick={() => handleUpdate(editCampaign.id)} disabled={busy} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar cambios'}</button>
+              <button onClick={() => setEditId(null)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {previewCampaign && previewDecomposed && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-100 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
@@ -320,7 +377,7 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {!showCreate && (
+      {!showCreate && !editId && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {loading ? (
             <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center text-sm text-gray-400">Cargando...</div>
@@ -328,25 +385,7 @@ export default function CampaignsPage() {
             <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center text-sm text-gray-400">Sin campanas todavia. Crea la primera.</div>
           ) : campaigns.map((campaign) => (
             <div key={campaign.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col min-h-[290px] hover:shadow-md transition-shadow">
-              {editId === campaign.id ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-sm text-gray-600 mb-1">Nombre</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm text-gray-600 mb-1">Asunto</label><input value={form.emailSubject} onChange={(e) => setForm({ ...form, emailSubject: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
-                  </div>
-                  <div><label className="block text-sm text-gray-600 mb-1">Contenido del correo</label><RichEditor key={`edit-${campaign.id}`} value={form.emailHtml} onChange={(v) => setForm({ ...form, emailHtml: v })} /></div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-sm text-gray-600 mb-1">Boton</label><input value={form.emailCta} onChange={(e) => setForm({ ...form, emailCta: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm text-gray-600 mb-1">URL del boton</label><input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
-                  </div>
-                  {form.emailHtml && <div><h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Previsualizacion</h4><div className="max-w-md mx-auto"><EmailPreview html={form.emailHtml} cta={form.emailCta} ctaUrl={form.emailCtaUrl} /></div></div>}
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => handleUpdate(campaign.id)} disabled={busy} className="px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar'}</button>
-                    <button onClick={() => setEditId(null)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg">Cancelar</button>
-                  </div>
-                </div>
-              ) : (
-                <>
+              <>
                   <div className="flex justify-between items-start gap-3">
                     <div className="min-w-0">
                       <h3 className="text-lg font-semibold text-gray-800 truncate" title={campaign.name}>{campaign.name}</h3>
@@ -374,8 +413,7 @@ export default function CampaignsPage() {
                     <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><EditIcon /></button>
                     <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><TrashIcon /></button>
                   </div>
-                </>
-              )}
+              </>
             </div>
           ))}
         </div>
