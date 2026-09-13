@@ -64,8 +64,8 @@ export class ContentService {
   }
 
   async update(id: string, dto: UpdateContentDto): Promise<ContentItem> {
-    await this.findOne(id);
-    return this.prisma.contentItem.update({
+    const current = await this.findOne(id);
+    const updated = await this.prisma.contentItem.update({
       where: { id },
       data: {
         ...(dto.title !== undefined ? { title: dto.title } : {}),
@@ -79,6 +79,12 @@ export class ContentService {
         ...(dto.status !== undefined ? { status: dto.status } : {}),
       },
     });
+
+    if (current.storageKey && dto.storageKey && current.storageKey !== dto.storageKey) {
+      await this.storage.deleteObject(current.storageKey);
+    }
+
+    return updated;
   }
 
   async remove(id: string) {

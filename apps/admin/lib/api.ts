@@ -138,13 +138,13 @@ export const campaignsApi = {
 // ---- Content ----
 export interface ContentInput {
   title: string;
-  description?: string;
-  category?: string;
+  description?: string | null;
+  category?: string | null;
   contentType?: string;
   fileName?: string;
   sizeBytes?: number;
   storageKey?: string;
-  downloadUrl?: string;
+  downloadUrl?: string | null;
   status?: string;
 }
 
@@ -152,6 +152,8 @@ export const contentApi = {
   list: () => request<{ items: ContentItem[]; total: number }>('/content'),
   create: (data: ContentInput) =>
     request<ContentItem>('/content', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<ContentInput>) =>
+    request<ContentItem>(`/content/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   remove: (id: string) => request<void>(`/content/${id}`, { method: 'DELETE' }),
   requestUpload: (fileName: string, contentType?: string) =>
     request<{ uploadUrl: string; storageKey: string }>('/content/upload-url', {
