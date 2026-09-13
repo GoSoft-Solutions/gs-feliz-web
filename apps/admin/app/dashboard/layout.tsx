@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <main className="ml-60 min-h-screen p-8 overflow-y-auto bg-gray-50">{children}</main>
+      <main className="ml-60 w-[calc(100%-15rem)] min-h-screen p-8 overflow-y-auto bg-gray-50">{children}</main>
     </div>
   );
 }
