@@ -1,0 +1,117 @@
+export type AdminRole = 'admin' | 'editor';
+
+export type PermissionKey =
+  | '/dashboard'
+  | '/dashboard/contacts'
+  | '/dashboard/campaigns'
+  | '/dashboard/newsletter'
+  | '/dashboard/content'
+  | '/dashboard/memberships'
+  | '/dashboard/courses'
+  | '/dashboard/analytics'
+  | '/dashboard/permissions';
+
+export interface AdminUser {
+  email: string;
+  name: string;
+  role: AdminRole;
+  password: string;
+  permissions: PermissionKey[];
+}
+
+export interface AdminSession {
+  email: string;
+  name: string;
+  role: AdminRole;
+  permissions: PermissionKey[];
+}
+
+export const permissionSections: Array<{ href: PermissionKey; label: string }> = [
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/dashboard/contacts', label: 'Contactos' },
+  { href: '/dashboard/campaigns', label: 'Campanas' },
+  { href: '/dashboard/newsletter', label: 'Newsletter' },
+  { href: '/dashboard/content', label: 'Contenido' },
+  { href: '/dashboard/memberships', label: 'Membresias' },
+  { href: '/dashboard/courses', label: 'Cursos' },
+  { href: '/dashboard/analytics', label: 'Analiticas' },
+];
+
+const defaultUsers: AdminUser[] = [
+  {
+    email: 'admin@feliz.mx',
+    name: 'Daniel Corral',
+    role: 'admin',
+    password: 'feliz2026',
+    permissions: permissionSections.map((section) => section.href),
+  },
+  {
+    email: 'editor@feliz.mx',
+    name: 'Editor FELIZ',
+    role: 'editor',
+    password: 'feliz2026',
+    permissions: ['/dashboard/campaigns', '/dashboard/newsletter', '/dashboard/content'],
+  },
+];
+
+const USERS_KEY = 'feliz_users';
+const SESSION_KEY = 'feliz_session';
+
+export function getUsers(): AdminUser[] {
+  if (typeof window === 'undefined') return defaultUsers;
+  const stored = localStorage.getItem(USERS_KEY);
+  if (!stored) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+    return defaultUsers;
+  }
+  try {
+    return JSON.parse(stored) as AdminUser[];
+  } catch {
+    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+    return defaultUsers;
+  }
+}
+
+export function saveUsers(users: AdminUser[]): void {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+export function authenticate(email: string, password: string): AdminSession | null {
+  const user = getUsers().find((candidate) => candidate.email === email && candidate.password === password);
+  if (!user) return null;
+  const session: AdminSession = {
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    permissions: user.permissions,
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem('feliz_auth', 'true');
+  return session;
+}
+
+export function getSession(): AdminSession | null {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(SESSION_KEY);
+  if (stored) {
+    try { return JSON.parse(stored) as AdminSession; } catch { /* reset below */ }
+  }
+  if (localStorage.getItem('feliz_auth') === 'true') {
+    const admin = getUsers()[0];
+    return { email: admin.email, name: admin.name, role: admin.role, permissions: admin.permissions };
+  }
+  return null;
+}
+
+export function clearSession(): void {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('feliz_auth');
+}
+
+export function canAccess(session: AdminSession, path: string): boolean {
+  return session.role === 'admin' || session.permissions.some((permission) => path === permission || path.startsWith(`${permission}/`));
+}
+
+export function firstAllowedPath(session: AdminSession): string {
+  return session.role === 'admin' ? '/dashboard' : session.permissions[0] ?? '/';
+}

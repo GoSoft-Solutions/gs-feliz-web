@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { authenticate } from '../lib/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,8 +11,7 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@feliz.mx' && password === 'feliz2026') {
-      localStorage.setItem('feliz_auth', 'true');
+    if (authenticate(email, password)) {
       router.push('/dashboard');
     } else {
       setError('Credenciales incorrectas');

@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { contentApi, type ContentItem } from '../../../lib/api';
 
 export default function NewsletterPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -8,7 +9,22 @@ export default function NewsletterPage() {
   const [audience, setAudience] = useState('ALL');
   const [cta, setCta] = useState('');
   const [ctaUrl, setCtaUrl] = useState('');
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [contentError, setContentError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    contentApi.list()
+      .then((result) => setContentItems(result.items.filter((item) => item.status === 'PUBLISHED')))
+      .catch(() => setContentError('No se pudo cargar el contenido publicado. Puedes usar un enlace manual.'));
+  }, []);
+
+  const attachContent = (contentId: string) => {
+    const item = contentItems.find((content) => content.id === contentId);
+    if (!item) return;
+    setCta((current) => current || `Descargar ${item.title}`);
+    setCtaUrl(contentApi.stableLink(item.id));
+  };
 
   return (
     <div>
@@ -77,6 +93,16 @@ export default function NewsletterPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">URL del boton</label>
                 <input value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="https://danielcorral.com.mx/..." />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Enlace del boton</label>
+              <select defaultValue="" onChange={(e) => attachContent(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                <option value="">Selecciona contenido publicado o usa el enlace manual</option>
+                {contentItems.map((item) => <option key={item.id} value={item.id}>{item.title}{item.category ? ` · ${item.category}` : ''}</option>)}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Al elegir contenido, el enlace estable se coloca automáticamente en el campo URL.</p>
+              {contentError && <p className="text-xs text-amber-600 mt-1">{contentError}</p>}
             </div>
 
             <div>

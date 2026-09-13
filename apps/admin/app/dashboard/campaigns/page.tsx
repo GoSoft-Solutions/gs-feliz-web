@@ -271,7 +271,8 @@ export default function CampaignsPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Slug</label>
-                  <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50" />
+                  <input value={form.slug} readOnly aria-readonly="true" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-100 text-gray-500 cursor-not-allowed" />
+                  <p className="text-xs text-gray-500 mt-1">Se genera desde el nombre y queda fijo porque forma parte del enlace público.</p>
                   {form.slug && <p className="text-xs text-gray-500 mt-1">{SITE}/news/{form.slug}</p>}
                 </div>
                 <div>
@@ -369,15 +370,6 @@ export default function CampaignsPage() {
                     <p className="text-xs text-gray-400 mt-1">El enlace será estable y generará una descarga S3 nueva cada vez que el usuario haga clic.</p>
                   </div>
                 )}
-                  {contentItems.length > 0 && (
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-1">Adjuntar contenido publicado</label>
-                      <select defaultValue="" onChange={(e) => attachContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
-                        <option value="">Selecciona un recurso para llenar el enlace</option>
-                        {contentItems.map((item) => <option key={item.id} value={item.id}>{item.title}{item.category ? ` · ${item.category}` : ''}</option>)}
-                      </select>
-                    </div>
-                  )}
               </div>
             </div>
             {form.emailHtml && (

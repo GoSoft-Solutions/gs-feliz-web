@@ -1,44 +1,43 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { canAccess, clearSession, firstAllowedPath, getSession, permissionSections, type AdminSession } from '../../lib/auth';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/contacts', label: 'Contactos' },
-  { href: '/dashboard/campaigns', label: 'Campanas' },
-  { href: '/dashboard/newsletter', label: 'Newsletter' },
-  { href: '/dashboard/content', label: 'Contenido' },
-  { href: '/dashboard/memberships', label: 'Membresias' },
-  { href: '/dashboard/courses', label: 'Cursos' },
-  { href: '/dashboard/analytics', label: 'Analiticas' },
-];
+const navItems = [...permissionSections, { href: '/dashboard/permissions' as const, label: 'Permisos' }];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [session, setSession] = useState<AdminSession | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('feliz_auth')) {
+    const currentSession = getSession();
+    setSession(currentSession);
+    if (!currentSession) {
       router.push('/');
+    } else if (pathname === '/dashboard/permissions' && currentSession.role !== 'admin') {
+      router.push(firstAllowedPath(currentSession));
+    } else if (pathname !== '/dashboard/permissions' && !canAccess(currentSession, pathname)) {
+      router.push(firstAllowedPath(currentSession));
     }
-  }, [router]);
+  }, [pathname, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('feliz_auth');
+    clearSession();
     router.push('/');
   };
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-60 bg-gray-900 text-white flex flex-col">
+      <aside className="fixed inset-y-0 left-0 z-40 w-60 bg-gray-900 text-white flex flex-col">
         <div className="p-6 border-b border-gray-800">
           <h1 className="text-xl font-bold tracking-wide">FELIZ</h1>
           <p className="text-gray-500 text-xs mt-1">Panel de Administracion</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
+          {navItems.filter((item) => item.href === '/dashboard/permissions' ? session?.role === 'admin' : session && canAccess(session, item.href)).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -53,18 +52,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
-          <p className="text-xs text-gray-500 mb-2">Daniel Corral</p>
+        <div className="p-4 border-t border-gray-800 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500">Daniel Corral</p>
+            <p className="text-xs text-gray-400 truncate">{session?.email}</p>
+          </div>
           <button
             onClick={handleLogout}
-            className="w-full px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left"
+            title="Cerrar sesion"
+            aria-label="Cerrar sesion"
+            className="shrink-0 px-2 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
           >
-            Cerrar Sesion
+            Salir
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-auto bg-gray-50">{children}</main>
+      <main className="ml-60 min-h-screen p-8 overflow-y-auto bg-gray-50">{children}</main>
     </div>
   );
 }
