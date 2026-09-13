@@ -5,7 +5,7 @@
  * The base URL comes from NEXT_PUBLIC_API_URL (set in Vercel to the EB
  * environment URL). Falls back to localhost for local development.
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 const BASE = `${API_URL}/api/v1`;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -159,6 +159,7 @@ export const contentApi = {
       body: JSON.stringify({ fileName, contentType }),
     }),
   downloadLink: (id: string) => request<{ url: string }>(`/content/${id}/download`),
+  stableLink: (id: string) => `${API_URL}/api/v1/content/${id}/access`,
 };
 
 /**

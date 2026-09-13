@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Redirect,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ContentService } from './content.service';
@@ -40,16 +41,24 @@ export class ContentController {
     return this.contentService.findAll(query);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a content item' })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Ret<'findOne'> {
-    return this.contentService.findOne(id);
-  }
-
   @Get(':id/download')
   @ApiOperation({ summary: 'Resolve a shareable download link for a content item' })
   download(@Param('id', ParseUUIDPipe) id: string): Ret<'getDownloadLink'> {
     return this.contentService.getDownloadLink(id);
+  }
+
+  @Get(':id/access')
+  @Redirect()
+  @ApiOperation({ summary: 'Redirect to a fresh downloadable content URL' })
+  async access(@Param('id', ParseUUIDPipe) id: string): Promise<{ url: string; statusCode: 302 }> {
+    const { url } = await this.contentService.getDownloadLink(id);
+    return { url, statusCode: 302 };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a content item' })
+  findOne(@Param('id', ParseUUIDPipe) id: string): Ret<'findOne'> {
+    return this.contentService.findOne(id);
   }
 
   @Patch(':id')

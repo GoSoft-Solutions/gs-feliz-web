@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { campaignsApi, type Campaign } from '../../../lib/api';
+import { campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
 
 const SITE = 'https://danielcorral.com.mx';
 
@@ -137,6 +137,7 @@ const slugify = (name: string) =>
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -150,7 +151,9 @@ export default function CampaignsPage() {
     setLoading(true);
     setError('');
     try {
-      setCampaigns(await campaignsApi.list());
+      const [campaignsResult, contentResult] = await Promise.all([campaignsApi.list(), contentApi.list()]);
+      setCampaigns(campaignsResult);
+      setContentItems(contentResult.items.filter((item) => item.status === 'PUBLISHED'));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar campanas');
     } finally {
@@ -171,6 +174,16 @@ export default function CampaignsPage() {
     } catch {
       setError('No se pudo copiar el enlace');
     }
+  };
+
+  const attachContent = (contentId: string) => {
+    const item = contentItems.find((content) => content.id === contentId);
+    if (!item) return;
+    setForm((current) => ({
+      ...current,
+      emailCta: current.emailCta || `Descargar ${item.title}`,
+      emailCtaUrl: contentApi.stableLink(item.id),
+    }));
   };
 
   const handleCreate = async () => {
@@ -346,6 +359,25 @@ export default function CampaignsPage() {
                     <input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                   </div>
                 </div>
+                {contentItems.length > 0 && (
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Adjuntar contenido publicado</label>
+                    <select defaultValue="" onChange={(e) => attachContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                      <option value="">Selecciona un recurso para llenar el enlace</option>
+                      {contentItems.map((item) => <option key={item.id} value={item.id}>{item.title}{item.category ? ` · ${item.category}` : ''}</option>)}
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">El enlace será estable y generará una descarga S3 nueva cada vez que el usuario haga clic.</p>
+                  </div>
+                )}
+                  {contentItems.length > 0 && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Adjuntar contenido publicado</label>
+                      <select defaultValue="" onChange={(e) => attachContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="">Selecciona un recurso para llenar el enlace</option>
+                        {contentItems.map((item) => <option key={item.id} value={item.id}>{item.title}{item.category ? ` · ${item.category}` : ''}</option>)}
+                      </select>
+                    </div>
+                  )}
               </div>
             </div>
             {form.emailHtml && (

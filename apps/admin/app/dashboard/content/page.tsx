@@ -27,6 +27,7 @@ export default function ContentPage() {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [busyMsg, setBusyMsg] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -104,7 +105,8 @@ export default function ContentPage() {
     try {
       const { url } = await contentApi.downloadLink(id);
       await navigator.clipboard.writeText(url);
-      alert('Link de descarga copiado al portapapeles.');
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((current) => current === id ? null : current), 1800);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al generar link');
     }
@@ -182,32 +184,38 @@ export default function ContentPage() {
             <p className="text-gray-500 mt-2 text-sm">Sube PDFs, videos y recursos para entregarlos a tus contactos.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Titulo</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Archivo</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-800">{item.title}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.category ?? '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{item.fileName ?? (item.downloadUrl ? 'Link externo' : '-')} {item.sizeBytes ? `· ${humanSize(item.sizeBytes)}` : ''}</td>
-                    <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">{item.status}</span></td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => handleCopyLink(item.id)} className="text-sm text-blue-600 hover:text-blue-800">Copiar link</button>
-                      <button onClick={() => handleDelete(item.id)} className="text-sm text-red-600 hover:text-red-800">Eliminar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {items.map((item) => (
+              <article key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col min-h-[245px] hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-800 truncate" title={item.title}>{item.title}</h3>
+                    <p className="mt-1 text-xs text-gray-500">{item.category || 'Sin categoría'}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-green-50 px-2 py-1 text-[11px] font-semibold tracking-wide text-green-700">{item.status}</span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-gray-600 line-clamp-3">{item.description || 'Recurso listo para compartir en una campaña.'}</p>
+                <div className="mt-auto pt-4">
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-500">
+                    <p className="truncate font-medium text-gray-700">{item.fileName ?? (item.downloadUrl ? 'Enlace externo' : 'Recurso')}</p>
+                    {item.sizeBytes ? <p className="mt-1">{humanSize(item.sizeBytes)}</p> : null}
+                  </div>
+                  <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                    <button
+                      onClick={() => void handleCopyLink(item.id)}
+                      title={copiedId === item.id ? 'Enlace copiado' : 'Copiar enlace de descarga'}
+                      aria-label={copiedId === item.id ? 'Enlace copiado' : 'Copiar enlace de descarga'}
+                      className={`rounded-lg px-3 py-2 text-xs font-medium transition ${copiedId === item.id ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
+                    >
+                      {copiedId === item.id ? 'Copiado' : 'Copiar enlace'}
+                    </button>
+                    <button onClick={() => void handleDelete(item.id)} title="Eliminar contenido" aria-label="Eliminar contenido" className="rounded-lg p-2 text-red-500 hover:bg-red-50">
+                      <span aria-hidden="true">&#128465;</span>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
         )
       )}
