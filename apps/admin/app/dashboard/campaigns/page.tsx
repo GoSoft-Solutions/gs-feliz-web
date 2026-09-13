@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
+import { useEffect, useState } from 'react';
+import { contactsApi, campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
+import { composeHtml, decompose, EmailPreview, RichEditor } from '../../../components/email-editor';
 
 const SITE = 'https://danielcorral.com.mx';
 
@@ -18,101 +19,6 @@ const emptyForm: FormState = {
   name: '', slug: '', source: 'Instagram',
   emailSubject: '', emailHtml: '', emailCta: '', emailCtaUrl: '',
 };
-
-const CTA_MARKER = '<!--cta-->';
-
-/** Appends the CTA button as HTML so the whole email is stored in emailHtml. */
-function composeHtml(body: string, cta: string, ctaUrl: string): string {
-  const clean = body.split(CTA_MARKER)[0];
-  if (!cta) return clean;
-  return `${clean}${CTA_MARKER}<p style="text-align:center;margin:40px 0 0"><a href="${ctaUrl || '#'}" style="display:inline-block;padding:12px 28px;background:#F4711A;color:#fff;font-weight:600;border-radius:8px;text-decoration:none">${cta}</a></p>`;
-}
-
-/** Splits stored html back into body + cta for editing. */
-function decompose(html: string | null): { body: string; cta: string; ctaUrl: string } {
-  if (!html) return { body: '', cta: '', ctaUrl: '' };
-  const [body, ctaPart] = html.split(CTA_MARKER);
-  if (!ctaPart) return { body, cta: '', ctaUrl: '' };
-  const cta = ctaPart.match(/>([^<]+)<\/a>/)?.[1] ?? '';
-  const ctaUrl = ctaPart.match(/href="([^"]*)"/)?.[1] ?? '';
-  return { body, cta, ctaUrl };
-}
-
-function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const editorRef = useRef<HTMLDivElement>(null);
-
-  // Set the initial HTML ONCE on mount. We deliberately do NOT bind the div's
-  // innerHTML to `value` on every render: doing so (e.g. via
-  // dangerouslySetInnerHTML on a controlled contentEditable) resets the
-  // caret to the start on each keystroke, which makes typed text appear
-  // reversed. The DOM is the source of truth while editing; we only push
-  // changes out via onChange.
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const exec = (cmd: string, val?: string) => {
-    editorRef.current?.focus();
-    document.execCommand(cmd, false, val);
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
-  };
-
-  const btn = 'px-3 py-1.5 text-sm rounded hover:bg-gray-200 transition-colors';
-
-  return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gray-900/10 focus-within:border-gray-400">
-      <div className="flex gap-1 p-2 bg-gray-50 border-b border-gray-200 flex-wrap">
-        <button type="button" onClick={() => exec('bold')} className={`${btn} font-bold`}>B</button>
-        <button type="button" onClick={() => exec('italic')} className={`${btn} italic`}>I</button>
-        <button type="button" onClick={() => exec('underline')} className={`${btn} underline`}>U</button>
-        <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => { const url = prompt('URL del enlace:'); if (url) exec('createLink', url); }} className={`${btn} text-blue-600`}>Enlace</button>
-        <button type="button" onClick={() => exec('unlink')} className={`${btn} text-gray-500`}>Quitar enlace</button>
-        <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec('insertUnorderedList')} className={btn}>Lista</button>
-        <button type="button" onClick={() => exec('formatBlock', 'h3')} className={`${btn} font-semibold`}>Titulo</button>
-        <button type="button" onClick={() => exec('formatBlock', 'p')} className={btn}>Parrafo</button>
-        <div className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec('justifyLeft')} className={btn}>Izq</button>
-        <button type="button" onClick={() => exec('justifyCenter')} className={btn}>Centro</button>
-      </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        className="p-4 min-h-[220px] text-sm text-gray-700 focus:outline-none prose prose-sm max-w-none"
-        onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
-        suppressContentEditableWarning
-      />
-      <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-        <p className="text-xs text-gray-400">Usa <code className="bg-gray-200 px-1 rounded">{'{{nombre}}'}</code> para personalizar con el nombre del contacto.</p>
-      </div>
-    </div>
-  );
-}
-
-function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl: string }) {
-  const previewHtml = html.replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
-  return (
-    <div className="bg-[#f3f4f6] p-3 sm:p-6 border border-gray-200 rounded-xl">
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
-        <div className="bg-gray-900 px-6 py-7 text-center">
-          <h2 className="text-white text-xl font-bold tracking-[0.25em]">DANIEL CORRAL</h2>
-        </div>
-        <div className="bg-white px-6 sm:px-8 pt-8 pb-11">
-          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-        {cta && (
-          <div className="mt-10 text-center">
-            <a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a>
-          </div>
-        )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function EyeIcon() {
   return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>;
@@ -145,6 +51,8 @@ export default function CampaignsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sendAudience, setSendAudience] = useState<Record<string, 'ALL' | 'LEAD' | 'NEWSLETTER'>>({});
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
   const load = async () => {
@@ -226,6 +134,25 @@ export default function CampaignsPage() {
     }
   };
 
+  const sendCampaign = async (campaign: Campaign) => {
+    if (!campaign.emailSubject || !campaign.emailHtml) {
+      setError('La campaña necesita asunto y contenido antes de enviarse.');
+      return;
+    }
+    const audience = sendAudience[campaign.id] ?? 'ALL';
+    if (!confirm(`¿Enviar esta campaña a la audiencia ${audience}?`)) return;
+    setSendingId(campaign.id);
+    setError('');
+    try {
+      const result = await contactsApi.sendBulkEmail({ subject: campaign.emailSubject, html: campaign.emailHtml, audience, campaignId: campaign.id, fromName: campaign.emailFromName ?? 'Daniel Corral' });
+      alert(`Correo enviado a ${result.sent} contacto(s).`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo enviar la campaña');
+    } finally {
+      setSendingId(null);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Eliminar esta campana?')) return;
     setBusy(true);
@@ -304,6 +231,16 @@ export default function CampaignsPage() {
                     <input value={form.emailCtaUrl} onChange={(e) => setForm({ ...form, emailCtaUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder={`${SITE}/...`} />
                   </div>
                 </div>
+                {contentItems.length > 0 && (
+                  <div className="mt-4">
+                    <label className="block text-sm text-gray-600 mb-1">Enlace del botón</label>
+                    <select defaultValue="" onChange={(e) => attachContent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                      <option value="">Selecciona contenido publicado o usa una URL manual</option>
+                      {contentItems.map((item) => <option key={item.id} value={item.id}>{item.title}{item.category ? ` · ${item.category}` : ''}</option>)}
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">El enlace estable se coloca automáticamente en URL del botón.</p>
+                  </div>
+                )}
               </div>
             </div>
             {(form.emailSubject || form.emailHtml) && (
@@ -433,6 +370,10 @@ export default function CampaignsPage() {
                     <code className="block text-xs leading-5 text-gray-700 font-mono break-all">{SITE}/news/{campaign.slug}</code>
                   </div>
                   <div className="mt-auto pt-5 flex items-center justify-end gap-1 border-t border-gray-100">
+                    <select value={sendAudience[campaign.id] ?? 'ALL'} onChange={(event) => setSendAudience((current) => ({ ...current, [campaign.id]: event.target.value as 'ALL' | 'LEAD' | 'NEWSLETTER' }))} className="mr-auto max-w-[130px] px-2 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white" aria-label="Audiencia de envio">
+                      <option value="ALL">Todos</option><option value="LEAD">Leads</option><option value="NEWSLETTER">Newsletter</option>
+                    </select>
+                    <button onClick={() => void sendCampaign(campaign)} disabled={sendingId === campaign.id} title="Enviar campaña" aria-label="Enviar campaña" className="px-3 py-2 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg disabled:opacity-50">{sendingId === campaign.id ? '...' : 'Enviar'}</button>
                     <button onClick={() => setPreviewId(campaign.id)} title="Ver correo" aria-label="Ver correo" className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><EyeIcon /></button>
                     <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><EditIcon /></button>
                     <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><TrashIcon /></button>

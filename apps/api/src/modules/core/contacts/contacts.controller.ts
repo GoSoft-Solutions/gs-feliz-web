@@ -5,6 +5,7 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ListContactsQueryDto } from './dto/list-contacts-query.dto';
 import { SendContactEmailDto } from './dto/send-email.dto';
+import { SendBulkEmailDto } from './dto/send-bulk-email.dto';
 
 // Explicit return types below work around TS2742 ("inferred type cannot
 // be named without a reference to .../@prisma/client/runtime/library"),
@@ -67,5 +68,12 @@ export class ContactsController {
     @Body() dto: SendContactEmailDto,
   ): ContactsServiceReturn<'sendCustomEmail'> {
     return this.contactsService.sendCustomEmail(id, dto);
+  }
+
+  @Post('bulk-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a personalized bulk email to an audience' })
+  sendBulkEmail(@Body() dto: SendBulkEmailDto): ContactsServiceReturn<'sendBulkEmail'> {
+    return this.contactsService.sendBulkEmail(dto);
   }
 }

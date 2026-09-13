@@ -7,6 +7,7 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ListContactsQueryDto } from './dto/list-contacts-query.dto';
 import { SendContactEmailDto } from './dto/send-email.dto';
+import { BulkEmailAudience, SendBulkEmailDto } from './dto/send-bulk-email.dto';
 
 @Injectable()
 export class ContactsService {
@@ -187,5 +188,33 @@ export class ContactsService {
     });
 
     return { success: true };
+  }
+
+  async sendBulkEmail(dto: SendBulkEmailDto): Promise<{ success: true; audience: BulkEmailAudience; matched: number; sent: number }> {
+    const where: Prisma.ContactWhereInput = {
+      email: { not: null },
+      unsubscribed: false,
+      ...(dto.audience === BulkEmailAudience.LEAD ? { status: 'LEAD' } : {}),
+      ...(dto.audience === BulkEmailAudience.NEWSLETTER
+        ? { sources: { some: { provider: 'LANDING', campaignId: null } } }
+        : {}),
+    };
+    const contacts = await this.prisma.contact.findMany({ where });
+    let sent = 0;
+    const applyTokens = (template: string, contact: { firstName: string | null; email: string | null }) =>
+      template.replace(/\{\{\s*(nombre|email)\s*\}\}/g, (_match, key: string) => key === 'nombre' ? contact.firstName?.trim() || 'Hola' : contact.email ?? '');
+
+    for (const contact of contacts) {
+      if (!contact.email) continue;
+      const subject = applyTokens(dto.subject, contact);
+      const html = applyTokens(dto.html, contact);
+      await this.email.send({ to: contact.email, subject, html, fromName: dto.fromName });
+      await this.prisma.contactEvent.create({
+        data: { contactId: contact.id, eventType: 'EMAIL_SENT', campaignId: dto.campaignId, source: 'bulk', metadata: { subject, audience: dto.audience } },
+      });
+      sent += 1;
+    }
+
+    return { success: true, audience: dto.audience, matched: contacts.length, sent };
   }
 }

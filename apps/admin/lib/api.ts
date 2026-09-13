@@ -112,6 +112,11 @@ export const contactsApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  sendBulkEmail: (data: { subject: string; html: string; audience: 'ALL' | 'LEAD' | 'NEWSLETTER'; campaignId?: string; fromName?: string }) =>
+    request<{ success: boolean; matched: number; sent: number }>('/contacts/bulk-email', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // ---- Campaigns ----
