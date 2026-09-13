@@ -173,7 +173,6 @@ export default function CampaignsPage() {
   };
 
   const previewCampaign = campaigns.find((c) => c.id === previewId);
-  const previewDecomposed = previewCampaign ? decompose(previewCampaign.emailHtml) : null;
   const editCampaign = campaigns.find((c) => c.id === editId);
 
   return (
@@ -323,7 +322,7 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {previewCampaign && previewDecomposed && (
+      {previewCampaign && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-100 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
             <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center">
@@ -333,7 +332,7 @@ export default function CampaignsPage() {
               </div>
               <button onClick={() => setPreviewId(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400">x</button>
             </div>
-            <div className="p-4"><EmailPreview html={previewDecomposed.body} cta={previewDecomposed.cta} ctaUrl={previewDecomposed.ctaUrl} /></div>
+            <div className="p-4"><EmailPreview html={previewCampaign.emailHtml ?? ''} cta="" ctaUrl="" /></div>
           </div>
         </div>
       )}

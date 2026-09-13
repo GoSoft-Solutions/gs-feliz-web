@@ -71,14 +71,15 @@ export function RichEditor({ value, onChange }: { value: string; onChange: (valu
 }
 
 export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl: string }) {
-  const previewHtml = html.replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
+  const hasStoredCta = html.includes(CTA_MARKER);
+  const previewHtml = html.replace(CTA_MARKER, '').replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
   return (
     <div className="bg-[#f3f4f6] p-3 sm:p-6 border border-gray-200 rounded-xl">
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
         <div className="bg-gray-900 px-6 py-7 text-center"><h2 className="text-white text-xl font-bold tracking-[0.25em]">DANIEL CORRAL</h2></div>
         <div className="bg-white px-6 sm:px-8 pt-8 pb-11">
           <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-          {cta && <div className="mt-10 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
+          {cta && !hasStoredCta && <div className="mt-10 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
         </div>
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-center text-xs leading-relaxed text-gray-400">
           danielcorral.com.mx
