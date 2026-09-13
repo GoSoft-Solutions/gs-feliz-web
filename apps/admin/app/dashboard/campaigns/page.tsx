@@ -114,6 +114,24 @@ function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl
   );
 }
 
+function EyeIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>;
+}
+
+function EditIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>;
+}
+
+function TrashIcon() {
+  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M10 11v6M14 11v6" /></svg>;
+}
+
+function CopyIcon({ copied }: { copied: boolean }) {
+  return copied
+    ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+    : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>;
+}
+
 const slugify = (name: string) =>
   name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -125,6 +143,7 @@ export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
   const load = async () => {
@@ -142,6 +161,17 @@ export default function CampaignsPage() {
   useEffect(() => { void load(); }, []);
 
   const resetForm = () => { setForm(emptyForm); setShowCreate(false); setEditId(null); };
+
+  const copyCampaignLink = async (campaign: Campaign) => {
+    const link = `${SITE}/news/${campaign.slug}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedId(campaign.id);
+      setTimeout(() => setCopiedId((current) => current === campaign.id ? null : current), 1800);
+    } catch {
+      setError('No se pudo copiar el enlace');
+    }
+  };
 
   const handleCreate = async () => {
     setBusy(true);
@@ -291,13 +321,13 @@ export default function CampaignsPage() {
       )}
 
       {!showCreate && (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {loading ? (
             <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center text-sm text-gray-400">Cargando...</div>
           ) : campaigns.length === 0 ? (
             <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center text-sm text-gray-400">Sin campanas todavia. Crea la primera.</div>
           ) : campaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div key={campaign.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col min-h-[290px] hover:shadow-md transition-shadow">
               {editId === campaign.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -317,21 +347,32 @@ export default function CampaignsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">{campaign.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">Fuente: {campaign.source ?? '-'}</p>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-800 truncate" title={campaign.name}>{campaign.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{campaign.source ?? 'Sin fuente'}</p>
                     </div>
-                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">{campaign.status}</span>
+                    <span className="shrink-0 inline-flex px-2 py-1 text-[11px] font-semibold tracking-wide bg-green-50 text-green-700 rounded-full">{campaign.status}</span>
                   </div>
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Link para ManyChat:</p>
-                    <code className="text-sm text-gray-700 font-mono break-all">{SITE}/news/{campaign.slug}</code>
+                  <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Link de campaña</p>
+                      <button
+                        type="button"
+                        onClick={() => void copyCampaignLink(campaign)}
+                        title={copiedId === campaign.id ? 'Enlace copiado' : 'Copiar enlace'}
+                        aria-label={copiedId === campaign.id ? 'Enlace copiado' : 'Copiar enlace'}
+                        className={`p-2 rounded-lg transition ${copiedId === campaign.id ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-gray-900 hover:bg-white'}`}
+                      >
+                        <CopyIcon copied={copiedId === campaign.id} />
+                      </button>
+                    </div>
+                    <code className="block text-xs leading-5 text-gray-700 font-mono break-all">{SITE}/news/{campaign.slug}</code>
                   </div>
-                  <div className="mt-4 flex gap-2 flex-wrap">
-                    <button onClick={() => setPreviewId(campaign.id)} className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded-lg">Ver correo</button>
-                    <button onClick={() => startEdit(campaign)} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg">Editar</button>
-                    <button onClick={() => handleDelete(campaign.id)} disabled={busy} className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 border border-red-200 rounded-lg disabled:opacity-50">Eliminar</button>
+                  <div className="mt-auto pt-5 flex items-center justify-end gap-1 border-t border-gray-100">
+                    <button onClick={() => setPreviewId(campaign.id)} title="Ver correo" aria-label="Ver correo" className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><EyeIcon /></button>
+                    <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><EditIcon /></button>
+                    <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><TrashIcon /></button>
                   </div>
                 </>
               )}
