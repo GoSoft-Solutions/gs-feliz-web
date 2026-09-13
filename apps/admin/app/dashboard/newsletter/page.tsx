@@ -125,7 +125,7 @@ export default function NewsletterPage() {
             {(subject || body) && (
               <div>
                 <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Previsualizacion</h4>
-                <div className="max-w-2xl mx-auto"><EmailPreview html={body} cta={cta} ctaUrl={ctaUrl} /></div>
+                <div className="max-w-md mx-auto"><EmailPreview html={body} cta={cta} ctaUrl={ctaUrl} /></div>
               </div>
             )}
 
