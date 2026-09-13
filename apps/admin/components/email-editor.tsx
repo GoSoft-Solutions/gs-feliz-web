@@ -12,10 +12,22 @@ export function composeHtml(body: string, cta: string, ctaUrl: string): string {
 export function decompose(html: string | null): { body: string; cta: string; ctaUrl: string } {
   if (!html) return { body: '', cta: '', ctaUrl: '' };
   const [body, ctaPart] = html.split(CTA_MARKER);
-  if (!ctaPart) return { body, cta: '', ctaUrl: '' };
-  const cta = ctaPart.match(/>([^<]+)<\/a>/)?.[1] ?? '';
-  const ctaUrl = ctaPart.match(/href="([^"]*)"/)?.[1] ?? '';
-  return { body, cta, ctaUrl };
+  if (ctaPart) {
+    return extractCta(body, ctaPart);
+  }
+
+  // Keep older campaigns editable: before the marker was added, the CTA
+  // could already exist as a regular anchor in the stored HTML.
+  const anchor = html.match(/<a\b[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i);
+  if (!anchor) return { body: html, cta: '', ctaUrl: '' };
+  const cta = anchor[2].replace(/<[^>]+>/g, '').trim();
+  return { body: html.replace(anchor[0], ''), cta, ctaUrl: anchor[1] };
+}
+
+function extractCta(body: string, ctaPart: string): { body: string; cta: string; ctaUrl: string } {
+  const anchor = ctaPart.match(/<a\b[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i);
+  if (!anchor) return { body, cta: '', ctaUrl: '' };
+  return { body, cta: anchor[2].replace(/<[^>]+>/g, '').trim(), ctaUrl: anchor[1] };
 }
 
 export function RichEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
