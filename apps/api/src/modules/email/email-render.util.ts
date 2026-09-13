@@ -38,9 +38,10 @@ export function renderCampaignEmail(
   };
 
   const body = applyTokens(campaign.emailHtml, tokens);
-  const html = subscriber.unsubscribeUrl
-    ? `${body}${unsubscribeFooter(subscriber.unsubscribeUrl)}`
-    : body;
+  const html = buildEmailDocument(
+    body,
+    subscriber.unsubscribeUrl ? unsubscribeFooter(subscriber.unsubscribeUrl) : '',
+  );
 
   return {
     to: subscriber.email,
@@ -53,6 +54,38 @@ export function renderCampaignEmail(
 
 function unsubscribeFooter(url: string): string {
   return `<hr style="margin-top:32px;border:none;border-top:1px solid #eee"/><p style="font-size:12px;color:#888;text-align:center;margin-top:16px">Recibes este correo porque te suscribiste en danielcorral.com.mx.<br/><a href="${url}" style="color:#888">Cancelar suscripción</a></p>`;
+}
+
+function buildEmailDocument(body: string, footer: string): string {
+  return `<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#374151">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f3f4f6">
+      <tr>
+        <td align="center" style="padding:24px 12px">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+            <tr>
+              <td align="center" style="padding:30px 24px;background:#111827;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:4px">
+                DANIEL CORRAL
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 32px;font-size:16px;line-height:1.7;color:#374151">
+                ${body}
+                ${footer}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:18px 24px;background:#f9fafb;border-top:1px solid #f3f4f6;color:#9ca3af;font-size:12px;line-height:1.5">
+                danielcorral.com.mx
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }
 
 function applyTokens(template: string, tokens: Record<string, string>): string {
