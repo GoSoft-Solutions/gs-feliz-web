@@ -13,12 +13,23 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async login(identifier: string, password: string) {
-    let user = await this.prisma.adminUser.findFirst({ where: { OR: [{ username: identifier.toLowerCase() }, { email: identifier.toLowerCase() }] } });
-    if (!user && identifier.toLowerCase() === 'daniel') {
-      user = await this.prisma.adminUser.create({ data: { username: 'daniel', email: 'admin@feliz.mx', name: 'Daniel Corral', role: AdminRole.ADMIN, permissions: DEFAULT_PERMISSIONS, passwordHash: hashPassword('feliz2026') } });
-    }
+    const user = await this.prisma.adminUser.findFirst({ where: { OR: [{ username: identifier.toLowerCase() }, { email: identifier.toLowerCase() }] } });
     if (!user || !verifyPassword(password, user.passwordHash)) throw new UnauthorizedException('Credenciales incorrectas');
     return { token: this.sign(user), user: this.publicUser(user) };
+  }
+
+  /**
+   * Self-service password change: the caller must prove they already know
+   * the current password (unlike updateUser, which lets an ADMIN reset
+   * anyone's password without it).
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.adminUser.findUnique({ where: { id: userId } });
+    if (!user || !verifyPassword(currentPassword, user.passwordHash)) {
+      throw new UnauthorizedException('La contraseña actual no es correcta');
+    }
+    await this.prisma.adminUser.update({ where: { id: userId }, data: { passwordHash: hashPassword(newPassword) } });
+    return { success: true };
   }
 
   verify(token: string) {

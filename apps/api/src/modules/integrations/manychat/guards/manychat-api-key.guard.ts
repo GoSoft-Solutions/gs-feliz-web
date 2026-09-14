@@ -1,4 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { timingSafeEqual } from 'crypto';
 import type { Request } from 'express';
 import { ENV_CONFIG } from '../../../../config/app-config.module';
 import { Inject } from '@nestjs/common';
@@ -24,10 +25,18 @@ export class ManyChatApiKeyGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const providedKey = request.headers['x-api-key'];
 
-    if (providedKey !== this.env.MANYCHAT_API_KEY) {
+    if (typeof providedKey !== 'string' || !safeEqual(providedKey, this.env.MANYCHAT_API_KEY)) {
       throw new UnauthorizedException('Invalid API key');
     }
 
     return true;
   }
+}
+
+/** Constant-time string comparison — a plain !== leaks timing information
+ * an attacker could use to guess the key byte by byte. */
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
 }

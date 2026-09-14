@@ -3,14 +3,80 @@ import { useEffect, useState } from 'react';
 import { getSession, permissionSections, type AdminRole, type AdminUser } from '../../../lib/auth';
 import { authApi, type ApiAdminUser } from '../../../lib/api';
 import { PageHeader } from '../../../components/page-header';
+import { PasswordInput } from '../../../components/password-input';
 import { IconPermissions, IconPlus, IconSave, IconTrash } from '../../../components/icons';
+
+function ChangeMyPassword() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const submit = () => {
+    setError('');
+    setSuccess(false);
+    if (!currentPassword || !newPassword) {
+      setError('Completa tu contraseña actual y la nueva.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError('La nueva contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('La confirmación no coincide con la nueva contraseña.');
+      return;
+    }
+    setBusy(true);
+    void authApi
+      .changePassword(currentPassword, newPassword)
+      .then(() => {
+        setSuccess(true);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : 'No se pudo cambiar la contraseña'))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <h2 className="font-semibold text-gray-800">Tu contraseña</h2>
+      <p className="text-sm text-gray-500 mt-1 mb-4">Cambia la contraseña de la cuenta con la que tienes sesión iniciada ahora.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <label className="text-sm text-gray-600">
+          Contraseña actual
+          <div className="mt-1"><PasswordInput value={currentPassword} onChange={setCurrentPassword} placeholder="********" className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm" /></div>
+        </label>
+        <label className="text-sm text-gray-600">
+          Nueva contraseña
+          <div className="mt-1"><PasswordInput value={newPassword} onChange={setNewPassword} placeholder="Mínimo 8 caracteres" className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm" /></div>
+        </label>
+        <label className="text-sm text-gray-600">
+          Confirmar nueva contraseña
+          <div className="mt-1"><PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Repite la nueva contraseña" className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm" /></div>
+        </label>
+      </div>
+      {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+      {success && <p className="text-sm text-green-600 mt-3">Contraseña actualizada.</p>}
+      <div className="flex justify-end mt-4">
+        <button type="button" onClick={submit} disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft disabled:opacity-50">
+          <IconSave size={17} /> {busy ? 'Guardando...' : 'Cambiar contraseña'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function PermissionsPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [saved, setSaved] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ username: '', name: '', password: 'feliz2026', role: 'editor' as AdminRole, permissions: [] as AdminUser['permissions'] });
+  const [form, setForm] = useState({ username: '', name: '', password: '', role: 'editor' as AdminRole, permissions: [] as AdminUser['permissions'] });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -46,6 +112,10 @@ export default function PermissionsPage() {
       setError('Completa nombre, usuario y contraseña.');
       return;
     }
+    if (form.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
     if (users.some((user) => user.username === username)) {
       setError('Ese usuario ya existe.');
       return;
@@ -60,7 +130,7 @@ export default function PermissionsPage() {
     };
     void authApi.createUser({ username: newUser.username, email: newUser.email, name: newUser.name, password: newUser.password, role: newUser.role === 'admin' ? 'ADMIN' : 'EDITOR', permissions: newUser.permissions }).then((created) => {
       const mapped = mapUser(created);
-      setUsers((current) => [...current, mapped]); setSelectedEmail(mapped.email); setShowCreate(false); setForm({ username: '', name: '', password: 'feliz2026', role: 'editor', permissions: [] }); setError('');
+      setUsers((current) => [...current, mapped]); setSelectedEmail(mapped.email); setShowCreate(false); setForm({ username: '', name: '', password: '', role: 'editor', permissions: [] }); setError('');
     }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo crear el usuario'));
   };
 
@@ -97,6 +167,8 @@ export default function PermissionsPage() {
 
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
+      <ChangeMyPassword />
+
       {showCreate && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-5">
@@ -106,7 +178,7 @@ export default function PermissionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <label className="text-sm text-gray-600">Nombre<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Nombre completo" /></label>
             <label className="text-sm text-gray-600">Usuario<input value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value.replace(/\s/g, '').toLowerCase() })} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="usuario" /></label>
-            <label className="text-sm text-gray-600">Contraseña<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" /></label>
+            <label className="text-sm text-gray-600">Contraseña<div className="mt-1"><PasswordInput value={form.password} onChange={(value) => setForm({ ...form, password: value })} placeholder="Mínimo 8 caracteres" className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm" /></div></label>
           </div>
           <div className="mt-4">
             <p className="text-sm text-gray-600 mb-2">Tipo de usuario</p>

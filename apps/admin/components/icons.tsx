@@ -83,6 +83,9 @@ export const IconTrash = (p: IconProps) => (
 export const IconEye = (p: IconProps) => (
   <Svg {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></Svg>
 );
+export const IconEyeOff = (p: IconProps) => (
+  <Svg {...p}><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c6.5 0 10 7 10 7a17.5 17.5 0 0 1-2.29 3.36M6.6 6.6C3.9 8.36 2 12 2 12s3.5 7 10 7a10.6 10.6 0 0 0 5.4-1.6" /><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><path d="M2 2l20 20" /></Svg>
+);
 export const IconMail = (p: IconProps) => (
   <Svg {...p}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 6L2 7" /></Svg>
 );

@@ -43,6 +43,10 @@ export const authApi = {
   createUser: (data: { username: string; email: string; name: string; password: string; role: 'ADMIN' | 'EDITOR'; permissions: string[] }) => request<ApiAdminUser>('/auth/users', { method: 'POST', body: JSON.stringify(data) }),
   updateUser: (id: string, data: { name?: string; password?: string; role?: 'ADMIN' | 'EDITOR'; permissions?: string[] }) => request<ApiAdminUser>(`/auth/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   removeUser: (id: string) => request<{ success: boolean }>(`/auth/users/${id}`, { method: 'DELETE' }),
+  // Self-service: change MY OWN password (requires the current one) —
+  // distinct from updateUser, which is an admin resetting someone else's.
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ success: boolean }>('/auth/me/password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
 };
 
 // ---- Types (mirror the API responses) ----

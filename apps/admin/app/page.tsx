@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../lib/api';
 import { saveApiSession } from '../lib/auth';
+import { PasswordInput } from '../components/password-input';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -51,13 +52,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange focus:border-transparent outline-none transition-all bg-white"
-              placeholder="********"
-            />
+            <PasswordInput value={password} onChange={setPassword} placeholder="********" />
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
