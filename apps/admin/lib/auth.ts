@@ -12,6 +12,7 @@ export type PermissionKey =
   | '/dashboard/permissions';
 
 export interface AdminUser {
+  username: string;
   email: string;
   name: string;
   role: AdminRole;
@@ -20,6 +21,7 @@ export interface AdminUser {
 }
 
 export interface AdminSession {
+  username: string;
   email: string;
   name: string;
   role: AdminRole;
@@ -39,6 +41,7 @@ export const permissionSections: Array<{ href: PermissionKey; label: string }> =
 
 const defaultUsers: AdminUser[] = [
   {
+    username: 'daniel',
     email: 'admin@feliz.mx',
     name: 'Daniel Corral',
     role: 'admin',
@@ -46,6 +49,7 @@ const defaultUsers: AdminUser[] = [
     permissions: permissionSections.map((section) => section.href),
   },
   {
+    username: 'editor',
     email: 'editor@feliz.mx',
     name: 'Editor FELIZ',
     role: 'editor',
@@ -65,7 +69,17 @@ export function getUsers(): AdminUser[] {
     return defaultUsers;
   }
   try {
-    return JSON.parse(stored) as AdminUser[];
+    const users = JSON.parse(stored) as Array<Partial<AdminUser>>;
+    const migratedUsers = users.map((user) => ({
+      username: user.email === 'admin@feliz.mx' ? 'daniel' : user.username ?? user.email?.split('@')[0] ?? 'usuario',
+      email: user.email ?? '',
+      name: user.email === 'admin@feliz.mx' ? 'Daniel Corral' : user.name ?? user.username ?? 'Usuario',
+      role: user.role ?? 'editor',
+      password: user.password ?? 'feliz2026',
+      permissions: user.permissions ?? [],
+    }));
+    localStorage.setItem(USERS_KEY, JSON.stringify(migratedUsers));
+    return migratedUsers;
   } catch {
     localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
     return defaultUsers;
@@ -76,10 +90,12 @@ export function saveUsers(users: AdminUser[]): void {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-export function authenticate(email: string, password: string): AdminSession | null {
-  const user = getUsers().find((candidate) => candidate.email === email && candidate.password === password);
+export function authenticate(identifier: string, password: string): AdminSession | null {
+  const normalizedIdentifier = identifier.trim().toLowerCase();
+  const user = getUsers().find((candidate) => (candidate.username === normalizedIdentifier || candidate.email === normalizedIdentifier) && candidate.password === password);
   if (!user) return null;
   const session: AdminSession = {
+    username: user.username,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -98,7 +114,7 @@ export function getSession(): AdminSession | null {
   }
   if (localStorage.getItem('feliz_auth') === 'true') {
     const admin = getUsers()[0];
-    return { email: admin.email, name: admin.name, role: admin.role, permissions: admin.permissions };
+    return { username: admin.username, email: admin.email, name: admin.name, role: admin.role, permissions: admin.permissions };
   }
   return null;
 }
