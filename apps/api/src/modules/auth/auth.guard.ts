@@ -27,5 +27,6 @@ function permissionForPath(path: string): string | null {
   if (path.includes('/contacts')) return '/dashboard/contacts';
   if (path.includes('/campaigns')) return '/dashboard/campaigns';
   if (path.includes('/content')) return '/dashboard/content';
+  if (path.includes('/analytics')) return '/dashboard/analytics';
   return null;
 }
