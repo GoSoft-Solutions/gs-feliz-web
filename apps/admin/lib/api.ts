@@ -180,6 +180,36 @@ export const contentApi = {
   stableLink: (id: string) => `${API_URL}/api/v1/content/${id}/access`,
 };
 
+// ---- Analytics ----
+export interface AnalyticsOverview {
+  totals: {
+    contacts: number;
+    newInWindow: number;
+    campaigns: number;
+    campaignsActive: number;
+    emailsSent: number;
+    unsubscribed: number;
+    unsubscribeRate: number;
+  };
+  statusBreakdown: Array<{ status: string; count: number }>;
+  sourceBreakdown: Array<{ source: string; count: number }>;
+  growth: Array<{ date: string; count: number }>;
+  campaignPerformance: Array<{ id: string; name: string; slug: string; contacts: number; emailsSent: number }>;
+  recentEvents: Array<{
+    id: string;
+    eventType: string;
+    contactName: string;
+    contactEmail: string | null;
+    campaignName: string | null;
+    source: string | null;
+    createdAt: string;
+  }>;
+}
+
+export const analyticsApi = {
+  overview: (days = 30) => request<AnalyticsOverview>(`/analytics/overview?days=${days}`),
+};
+
 /**
  * Uploads a file's bytes directly to S3 using a presigned PUT URL.
  * Kept separate from `request` because it targets S3, not our API, and
