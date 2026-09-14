@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { contactsApi, contentApi, type ContentItem } from '../../../lib/api';
 import { composeHtml, EmailPreview, RichEditor } from '../../../components/email-editor';
+import { PageHeader } from '../../../components/page-header';
+import { IconMail, IconNewsletter } from '../../../components/icons';
 
 export default function NewsletterPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -46,29 +48,30 @@ export default function NewsletterPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Newsletter</h1>
-          <p className="text-sm text-gray-500 mt-1">Link de suscripcion directa: <code className="text-green-700 bg-green-50 px-2 py-0.5 rounded">danielcorral.com.mx/news</code></p>
-        </div>
-        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm">
-          + Nueva Campana de Email
-        </button>
-      </div>
+      <PageHeader
+        icon={<IconNewsletter size={20} />}
+        title="Newsletter"
+        description={<>Link de suscripción directa: <code className="text-orange bg-orange/10 px-2 py-0.5 rounded">danielcorral.com.mx/news</code></>}
+        actions={
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-ink hover:bg-ink-soft text-white font-medium rounded-lg transition-colors text-sm">
+            + Nueva campaña de email
+          </button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Suscriptores</p>
-          <p className="text-2xl font-bold text-gray-800">1</p>
+          <p className="font-display text-3xl tracking-wide text-ink mt-1">1</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Emails Enviados</p>
-          <p className="text-2xl font-bold text-gray-800">0</p>
+          <p className="font-display text-3xl tracking-wide text-ink mt-1">0</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Tasa de Apertura</p>
-          <p className="text-2xl font-bold text-gray-800">--</p>
+          <p className="font-display text-3xl tracking-wide text-ink mt-1">--</p>
         </div>
       </div>
 
@@ -130,7 +133,7 @@ export default function NewsletterPage() {
             )}
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button onClick={() => void sendEmail()} disabled={busy || !subject || !body} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium disabled:opacity-50">{busy ? 'Enviando...' : 'Enviar Ahora'}</button>
+              <button onClick={() => void sendEmail()} disabled={busy || !subject || !body} className="px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft font-medium disabled:opacity-50">{busy ? 'Enviando...' : 'Enviar ahora'}</button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>
@@ -139,9 +142,12 @@ export default function NewsletterPage() {
 
       {/* Empty state */}
       {!showCreate && (
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center">
-          <h3 className="text-lg font-semibold text-gray-800">Sin campanas de email enviadas</h3>
-          <p className="text-gray-500 mt-2 text-sm">Crea tu primera campana para llegar a tus suscriptores.</p>
+        <div className="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 text-center">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-orange/10 text-orange mb-4">
+            <IconMail size={20} />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Sin campañas de email enviadas</h3>
+          <p className="text-gray-500 mt-2 text-sm">Crea tu primera campaña para llegar a tus suscriptores.</p>
         </div>
       )}
     </div>

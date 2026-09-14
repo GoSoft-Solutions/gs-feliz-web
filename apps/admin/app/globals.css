@@ -2,6 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+/* Base font is set via next/font in app/layout.tsx (Plus Jakarta Sans,
+   the same body typeface as apps/landing) and applied with the
+   font-sans utility on <body> — nothing to override here. */

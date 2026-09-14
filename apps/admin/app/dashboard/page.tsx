@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { campaignsApi, contactsApi, type Campaign, type Contact } from '../../lib/api';
+import { PageHeader } from '../../components/page-header';
+import { IconCampaigns, IconContacts, IconDashboard, IconMail, IconTrendingUp } from '../../components/icons';
 
 function fullName(c: Contact): string {
   return [c.firstName, c.lastName].filter(Boolean).join(' ') || '(sin nombre)';
@@ -32,10 +34,10 @@ export default function DashboardPage() {
   }, []);
 
   const stats = [
-    { label: 'Total Contactos', value: contacts.length },
-    { label: 'Nuevos esta semana', value: contacts.filter((c) => isThisWeek(c.createdAt)).length },
-    { label: 'Campanas Activas', value: campaigns.filter((c) => c.status === 'ACTIVE').length },
-    { label: 'Emails Enviados', value: 0 },
+    { label: 'Total Contactos', value: contacts.length, icon: IconContacts },
+    { label: 'Nuevos esta semana', value: contacts.filter((c) => isThisWeek(c.createdAt)).length, icon: IconTrendingUp },
+    { label: 'Campanas Activas', value: campaigns.filter((c) => c.status === 'ACTIVE').length, icon: IconCampaigns },
+    { label: 'Emails Enviados', value: 0, icon: IconMail },
   ];
 
   const recent = [...contacts]
@@ -47,20 +49,23 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-8">Dashboard</h1>
+      <PageHeader icon={<IconDashboard size={20} />} title="Dashboard" description="Lo que está pasando en FELIZ ahora mismo." />
 
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <p className="text-sm text-gray-500">{stat.label}</p>
-            <p className="text-3xl font-bold text-gray-800 mt-1">{loading ? '—' : stat.value}</p>
+          <div key={stat.label} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2.5 text-gray-500">
+              <stat.icon size={16} />
+              <p className="text-sm">{stat.label}</p>
+            </div>
+            <p className="font-display text-4xl tracking-wide text-ink mt-2">{loading ? '—' : stat.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">Contactos Recientes</h2>
         </div>
@@ -84,9 +89,9 @@ export default function DashboardPage() {
                 <tr key={c.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{fullName(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
-                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded capitalize">{c.sources?.[0]?.source ?? '-'}</span></td>
+                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-orange/10 text-orange rounded capitalize">{c.sources?.[0]?.source ?? '-'}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600">{campaignName(c.sources?.[0]?.campaignId)}</td>
-                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-50 text-yellow-700 rounded">{c.status}</span></td>
+                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{c.status}</span></td>
                 </tr>
               ))
             )}

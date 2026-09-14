@@ -2,22 +2,8 @@
 import { useEffect, useState } from 'react';
 import { getSession, permissionSections, type AdminRole, type AdminUser } from '../../../lib/auth';
 import { authApi, type ApiAdminUser } from '../../../lib/api';
-
-function UserIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>;
-}
-
-function PlusIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
-}
-
-function TrashIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 11v5M14 11v5" /></svg>;
-}
-
-function SaveIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 4h12l2 2v14H5z" /><path d="M8 4v6h8V4M8 20v-6h8v6" /></svg>;
-}
+import { PageHeader } from '../../../components/page-header';
+import { IconPermissions, IconPlus, IconSave, IconTrash } from '../../../components/icons';
 
 export default function PermissionsPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -98,15 +84,16 @@ export default function PermissionsPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Permisos</h1>
-          <p className="text-sm text-gray-500 mt-1">Administra usuarios y acceso por sección.</p>
-        </div>
-        <button type="button" onClick={() => { setShowCreate(true); setError(''); }} title="Crear nuevo usuario" aria-label="Crear nuevo usuario" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800">
-          <PlusIcon /> <span>Nuevo usuario</span>
-        </button>
-      </div>
+      <PageHeader
+        icon={<IconPermissions size={20} />}
+        title="Permisos"
+        description="Administra usuarios y acceso por sección."
+        actions={
+          <button type="button" onClick={() => { setShowCreate(true); setError(''); }} title="Crear nuevo usuario" aria-label="Crear nuevo usuario" className="inline-flex items-center gap-2 px-3 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft">
+            <IconPlus size={17} /> <span>Nuevo usuario</span>
+          </button>
+        }
+      />
 
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
@@ -124,11 +111,11 @@ export default function PermissionsPage() {
           <div className="mt-4">
             <p className="text-sm text-gray-600 mb-2">Tipo de usuario</p>
             <div className="flex gap-3">
-              {(['admin', 'editor'] as AdminRole[]).map((role) => <button key={role} type="button" onClick={() => setForm({ ...form, role })} className={`px-3 py-2 rounded-lg border text-sm ${form.role === role ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}>{role === 'admin' ? 'Administrador' : 'Editable'}</button>)}
+              {(['admin', 'editor'] as AdminRole[]).map((role) => <button key={role} type="button" onClick={() => setForm({ ...form, role })} className={`px-3 py-2 rounded-lg border text-sm ${form.role === role ? 'border-ink bg-ink text-white' : 'border-gray-200 text-gray-600'}`}>{role === 'admin' ? 'Administrador' : 'Editable'}</button>)}
             </div>
           </div>
-          {form.role === 'editor' && <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">{permissionSections.map((section) => <label key={section.href} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"><input type="checkbox" checked={form.permissions.includes(section.href)} onChange={(event) => toggleNewPermission(section.href, event.target.checked)} className="h-4 w-4 accent-gray-900" />{section.label}</label>)}</div>}
-          <div className="flex justify-end mt-5"><button type="button" onClick={createUser} title="Guardar usuario" aria-label="Guardar usuario" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800"><SaveIcon /> Crear usuario</button></div>
+          {form.role === 'editor' && <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">{permissionSections.map((section) => <label key={section.href} className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"><input type="checkbox" checked={form.permissions.includes(section.href)} onChange={(event) => toggleNewPermission(section.href, event.target.checked)} className="h-4 w-4 accent-ink" />{section.label}</label>)}</div>}
+          <div className="flex justify-end mt-5"><button type="button" onClick={createUser} title="Guardar usuario" aria-label="Guardar usuario" className="inline-flex items-center gap-2 px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft"><IconSave size={17} /> Crear usuario</button></div>
         </div>
       )}
 
@@ -137,7 +124,7 @@ export default function PermissionsPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Usuarios</p>
           <div className="space-y-2">
             {users.map((user) => (
-              <div key={user.email} className={`flex items-center gap-2 rounded-lg border transition-colors ${selectedEmail === user.email ? 'border-gray-900 bg-gray-50' : 'border-gray-100 hover:border-gray-300'}`}>
+              <div key={user.email} className={`flex items-center gap-2 rounded-lg border transition-colors ${selectedEmail === user.email ? 'border-ink bg-gray-50' : 'border-gray-100 hover:border-gray-300'}`}>
               <button
                 type="button"
                 onClick={() => { setSelectedEmail(user.email); setSaved(false); }}
@@ -147,7 +134,7 @@ export default function PermissionsPage() {
                 <span className="block text-xs text-gray-500 mt-1">@{user.username}</span>
                 <span className="block text-xs text-gray-400 mt-1">{user.role === 'admin' ? 'Administrador' : 'Editable'}</span>
               </button>
-              <button type="button" onClick={() => deleteUser(user)} disabled={user.role === 'admin'} title={user.role === 'admin' ? 'El administrador no se puede borrar' : 'Borrar usuario'} aria-label={user.role === 'admin' ? 'El administrador no se puede borrar' : 'Borrar usuario'} className="p-2 mr-2 text-gray-400 hover:text-red-600 disabled:opacity-30"><TrashIcon /></button>
+              <button type="button" onClick={() => deleteUser(user)} disabled={user.role === 'admin'} title={user.role === 'admin' ? 'El administrador no se puede borrar' : 'Borrar usuario'} aria-label={user.role === 'admin' ? 'El administrador no se puede borrar' : 'Borrar usuario'} className="p-2 mr-2 text-gray-400 hover:text-red-600 disabled:opacity-30"><IconTrash size={17} /></button>
               </div>
             ))}
           </div>
@@ -161,7 +148,7 @@ export default function PermissionsPage() {
                   <h2 className="font-semibold text-gray-800">Acceso de {selectedUser.name}</h2>
                   <p className="text-sm text-gray-500 mt-1">{selectedUser.role === 'admin' ? 'El administrador conserva acceso total.' : 'Selecciona las secciones disponibles para este usuario.'}</p>
                 </div>
-                {selectedUser.role !== 'admin' && <span className="text-xs px-2 py-1 rounded bg-orange-50 text-orange-700">Editable</span>}
+                {selectedUser.role !== 'admin' && <span className="text-xs px-2 py-1 rounded bg-orange/10 text-orange">Editable</span>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -169,7 +156,7 @@ export default function PermissionsPage() {
                   const checked = selectedUser.role === 'admin' || selectedUser.permissions.includes(section.href);
                   return (
                     <label key={section.href} className={`flex items-center gap-3 border rounded-lg px-4 py-3 ${selectedUser.role === 'admin' ? 'bg-gray-50 text-gray-400' : 'border-gray-200'}`}>
-                      <input type="checkbox" checked={checked} disabled={selectedUser.role === 'admin'} onChange={(event) => updatePermission(section.href, event.target.checked)} className="h-4 w-4 accent-gray-900" />
+                      <input type="checkbox" checked={checked} disabled={selectedUser.role === 'admin'} onChange={(event) => updatePermission(section.href, event.target.checked)} className="h-4 w-4 accent-ink" />
                       <span className="text-sm text-gray-700">{section.label}</span>
                     </label>
                   );
@@ -178,7 +165,7 @@ export default function PermissionsPage() {
 
               {selectedUser.role !== 'admin' && (
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-gray-100">
-                  <button type="button" onClick={handleSave} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800">Guardar permisos</button>
+                  <button type="button" onClick={handleSave} className="px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft">Guardar permisos</button>
                   {saved && <span className="text-sm text-green-600">Permisos guardados.</span>}
                 </div>
               )}

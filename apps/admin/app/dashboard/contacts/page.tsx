@@ -1,6 +1,8 @@
 'use client';
 import { Fragment, useEffect, useState } from 'react';
 import { contactsApi, type Contact } from '../../../lib/api';
+import { PageHeader } from '../../../components/page-header';
+import { IconChevron, IconContacts, IconEdit, IconHistory, IconMail, IconSearch, IconTrash } from '../../../components/icons';
 
 function fullName(c: Contact): string {
   const name = [c.firstName, c.lastName].filter(Boolean).join(' ');
@@ -13,53 +15,6 @@ function sourceLabel(c: Contact): string {
 
 function campaignLabel(c: Contact): string {
   return c.sources?.[0]?.campaign?.name || '-';
-}
-
-function ChevronIcon({ expanded }: { expanded: boolean }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={expanded ? 'm6 9 6 6 6-6' : 'm9 6 6 6-6 6'} />
-    </svg>
-  );
-}
-
-function HistoryIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-
-// --- Inline icons (no extra dependency) ---
-function TrashIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m22 7-10 6L2 7" />
-    </svg>
-  );
-}
-
-function EditIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
-    </svg>
-  );
 }
 
 export default function ContactsPage() {
@@ -185,10 +140,11 @@ export default function ContactsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Contactos</h1>
-        <span className="text-sm text-gray-500">{contacts.length} contacto(s) total</span>
-      </div>
+      <PageHeader
+        icon={<IconContacts size={20} />}
+        title="Contactos"
+        description={`${contacts.length} contacto(s) en total`}
+      />
 
       {toast && (
         <div className="mb-4 px-4 py-2 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200">
@@ -196,20 +152,21 @@ export default function ContactsPage() {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-4 relative max-w-md">
+        <IconSearch size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') void load(search); }}
           placeholder="Buscar por nombre o email... (Enter)"
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange focus:border-transparent outline-none"
         />
       </div>
 
       {error && !emailTarget && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -233,7 +190,7 @@ export default function ContactsPage() {
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{fullName(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
-                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-yellow-50 text-yellow-700 rounded">{c.status}</span></td>
+                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{c.status}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{sourceLabel(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
@@ -247,9 +204,9 @@ export default function ContactsPage() {
                           aria-expanded={expandedContacts.has(c.id)}
                           className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition"
                         >
-                          <HistoryIcon />
+                          <IconHistory size={15} />
                           <span>{c.sources.length}</span>
-                          <ChevronIcon expanded={expandedContacts.has(c.id)} />
+                          <IconChevron size={16} direction={expandedContacts.has(c.id) ? 'up' : 'down'} />
                         </button>
                       )}
                     </div>
@@ -263,7 +220,7 @@ export default function ContactsPage() {
                         aria-label="Editar contacto"
                         className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
                       >
-                        <EditIcon />
+                        <IconEdit size={18} />
                       </button>
                       <button
                         onClick={() => openEmail(c)}
@@ -271,14 +228,14 @@ export default function ContactsPage() {
                         disabled={!c.email}
                         className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        <MailIcon />
+                        <IconMail size={18} />
                       </button>
                       <button
                         onClick={() => void remove(c)}
                         title="Eliminar contacto"
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                       >
-                        <TrashIcon />
+                        <IconTrash size={18} />
                       </button>
                     </div>
                   </td>
@@ -332,7 +289,7 @@ export default function ContactsPage() {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Asunto del correo"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange outline-none text-sm"
                 />
               </div>
               <div>
@@ -342,7 +299,7 @@ export default function ContactsPage() {
                   onChange={(e) => setBody(e.target.value)}
                   rows={8}
                   placeholder="Escribe tu mensaje... Puedes usar {{nombre}} para personalizar."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-sm resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange outline-none text-sm resize-y"
                 />
                 <p className="text-xs text-gray-400 mt-1">Consejo: usa {'{{nombre}}'} y {'{{email}}'} para personalizar.</p>
               </div>
@@ -358,7 +315,7 @@ export default function ContactsPage() {
               <button
                 onClick={() => void sendEmail()}
                 disabled={sending}
-                className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium bg-ink text-white rounded-lg hover:bg-ink-soft disabled:opacity-50"
               >
                 {sending ? 'Enviando...' : 'Enviar correo'}
               </button>
@@ -378,25 +335,25 @@ export default function ContactsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Nombre</label>
-                  <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                  <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Apellido</label>
-                  <input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                  <input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Email</label>
-                <input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                <input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Telefono</label>
-                  <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+                  <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Status</label>
-                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-sm">
+                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm">
                     <option value="LEAD">LEAD</option>
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="CUSTOMER">CUSTOMER</option>
@@ -408,7 +365,7 @@ export default function ContactsPage() {
             </div>
             <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
               <button onClick={() => setEditTarget(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-              <button onClick={() => void saveEdit()} disabled={savingEdit} className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50">
+              <button onClick={() => void saveEdit()} disabled={savingEdit} className="px-4 py-2 text-sm font-medium bg-ink text-white rounded-lg hover:bg-ink-soft disabled:opacity-50">
                 {savingEdit ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>

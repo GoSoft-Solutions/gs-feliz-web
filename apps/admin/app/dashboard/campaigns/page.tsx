@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { contactsApi, campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
 import { composeHtml, decompose, EmailPreview, RichEditor } from '../../../components/email-editor';
+import { PageHeader } from '../../../components/page-header';
+import { IconCampaigns, IconCheck, IconCopy, IconEdit, IconEye, IconTrash } from '../../../components/icons';
 
 const SITE = 'https://danielcorral.com.mx';
 
@@ -19,24 +21,6 @@ const emptyForm: FormState = {
   name: '', slug: '', source: 'Instagram',
   emailSubject: '', emailHtml: '', emailCta: '', emailCtaUrl: '',
 };
-
-function EyeIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>;
-}
-
-function EditIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>;
-}
-
-function TrashIcon() {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M10 11v6M14 11v6" /></svg>;
-}
-
-function CopyIcon({ copied }: { copied: boolean }) {
-  return copied
-    ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
-    : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>;
-}
 
 const slugify = (name: string) =>
   name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -177,10 +161,14 @@ export default function CampaignsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Campanas</h1>
-        {!showCreate && !editId && <button onClick={() => { setForm(emptyForm); setShowCreate(true); }} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm">+ Nueva Campana</button>}
-      </div>
+      <PageHeader
+        icon={<IconCampaigns size={20} />}
+        title="Campañas"
+        description="Cada campaña tiene su propio link y su correo de bienvenida."
+        actions={!showCreate && !editId && (
+          <button onClick={() => { setForm(emptyForm); setShowCreate(true); }} className="px-4 py-2 bg-ink hover:bg-ink-soft text-white font-medium rounded-lg text-sm">+ Nueva campaña</button>
+        )}
+      />
 
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
@@ -249,7 +237,7 @@ export default function CampaignsPage() {
               </div>
             )}
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button onClick={handleCreate} disabled={busy || !form.name} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium disabled:opacity-50">{busy ? 'Creando...' : 'Crear Campana'}</button>
+              <button onClick={handleCreate} disabled={busy || !form.name} className="px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft font-medium disabled:opacity-50">{busy ? 'Creando...' : 'Crear Campana'}</button>
               <button onClick={resetForm} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>
@@ -315,7 +303,7 @@ export default function CampaignsPage() {
               </div>
             )}
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button onClick={() => handleUpdate(editCampaign.id)} disabled={busy} className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 font-medium disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar cambios'}</button>
+              <button onClick={() => handleUpdate(editCampaign.id)} disabled={busy} className="px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft font-medium disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar cambios'}</button>
               <button onClick={() => setEditId(null)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>
@@ -366,7 +354,7 @@ export default function CampaignsPage() {
                         aria-label={copiedId === campaign.id ? 'Enlace copiado' : 'Copiar enlace'}
                         className={`p-2 rounded-lg transition ${copiedId === campaign.id ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-gray-900 hover:bg-white'}`}
                       >
-                        <CopyIcon copied={copiedId === campaign.id} />
+                        {copiedId === campaign.id ? <IconCheck size={17} /> : <IconCopy size={17} />}
                       </button>
                     </div>
                     <code className="block text-xs leading-5 text-gray-700 font-mono break-all">{SITE}/news/{campaign.slug}</code>
@@ -375,10 +363,10 @@ export default function CampaignsPage() {
                     <select value={sendAudience[campaign.id] ?? 'ALL'} onChange={(event) => setSendAudience((current) => ({ ...current, [campaign.id]: event.target.value as 'ALL' | 'LEAD' | 'NEWSLETTER' }))} className="mr-auto max-w-[130px] px-2 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white" aria-label="Audiencia de envio">
                       <option value="ALL">Todos</option><option value="LEAD">Leads</option><option value="NEWSLETTER">Newsletter</option>
                     </select>
-                    <button onClick={() => void sendCampaign(campaign)} disabled={sendingId === campaign.id} title="Enviar campaña" aria-label="Enviar campaña" className="px-3 py-2 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg disabled:opacity-50">{sendingId === campaign.id ? '...' : 'Enviar'}</button>
-                    <button onClick={() => setPreviewId(campaign.id)} title="Ver correo" aria-label="Ver correo" className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><EyeIcon /></button>
-                    <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><EditIcon /></button>
-                    <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><TrashIcon /></button>
+                    <button onClick={() => void sendCampaign(campaign)} disabled={sendingId === campaign.id} title="Enviar campaña" aria-label="Enviar campaña" className="px-3 py-2 text-xs font-medium text-white bg-ink hover:bg-ink-soft rounded-lg disabled:opacity-50">{sendingId === campaign.id ? '...' : 'Enviar'}</button>
+                    <button onClick={() => setPreviewId(campaign.id)} title="Ver correo" aria-label="Ver correo" className="p-2.5 text-orange hover:bg-orange/10 rounded-lg transition"><IconEye size={17} /></button>
+                    <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><IconEdit size={17} /></button>
+                    <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><IconTrash size={17} /></button>
                   </div>
               </>
             </div>
