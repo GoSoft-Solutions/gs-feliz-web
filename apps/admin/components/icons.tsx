@@ -92,6 +92,9 @@ export const IconMail = (p: IconProps) => (
 export const IconLink = (p: IconProps) => (
   <Svg {...p}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></Svg>
 );
+export const IconUnlink = (p: IconProps) => (
+  <Svg {...p}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /><path d="M3 3l18 18" /></Svg>
+);
 export const IconCopy = (p: IconProps) => (
   <Svg {...p}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></Svg>
 );
@@ -116,4 +119,45 @@ export const IconSearch = (p: IconProps) => (
 );
 export const IconTrendingUp = (p: IconProps) => (
   <Svg {...p}><path d="m3 17 6-6 4 4 8-8" /><path d="M17 7h4v4" /></Svg>
+);
+export const IconSend = (p: IconProps) => (
+  <Svg {...p}><path d="m22 2-11 11" /><path d="M22 2 15 22l-4-9-9-4Z" /></Svg>
+);
+
+// --- Rich-text editor toolbar -----------------------------------------------
+export const IconUndo = (p: IconProps) => (
+  <Svg {...p}><path d="M3 10h10a5 5 0 0 1 0 10H8" /><path d="m7 5-4 5 4 5" /></Svg>
+);
+export const IconRedo = (p: IconProps) => (
+  <Svg {...p}><path d="M21 10H11a5 5 0 0 0 0 10h5" /><path d="m17 5 4 5-4 5" /></Svg>
+);
+export const IconStrikethrough = (p: IconProps) => (
+  <Svg {...p}><path d="M6 12h12" /><path d="M8 6.5C8.5 5 10 4 12 4c2.5 0 4.5 1.3 4.5 3.2 0 1.2-.7 2-1.8 2.6" /><path d="M8.7 15.5c-.3.9-.1 1.8.6 2.6.9 1 2.3 1.4 3.7 1.4 2.2 0 4-1.1 4-2.9 0-.8-.3-1.4-.8-1.9" /></Svg>
+);
+export const IconListBullets = (p: IconProps) => (
+  <Svg {...p}><circle cx="4.5" cy="6" r="1.25" fill="currentColor" stroke="none" /><circle cx="4.5" cy="12" r="1.25" fill="currentColor" stroke="none" /><circle cx="4.5" cy="18" r="1.25" fill="currentColor" stroke="none" /><path d="M9 6h11M9 12h11M9 18h11" /></Svg>
+);
+export const IconListNumbers = (p: IconProps) => (
+  <Svg {...p}><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 5.5V9M3.5 5.5H4.5M3.5 9.5h1.5" /><path d="M3.5 13.5h1.8c.5 0 .7.6.3.9l-2 1.8h2.3" /></Svg>
+);
+export const IconAlignLeft = (p: IconProps) => (
+  <Svg {...p}><path d="M4 6h16M4 12h10M4 18h13" /></Svg>
+);
+export const IconAlignCenter = (p: IconProps) => (
+  <Svg {...p}><path d="M4 6h16M7 12h10M5.5 18h13" /></Svg>
+);
+export const IconAlignRight = (p: IconProps) => (
+  <Svg {...p}><path d="M4 6h16M10 12h10M7 18h13" /></Svg>
+);
+export const IconQuote = (p: IconProps) => (
+  <Svg {...p}><path d="M7 7.5C5 8.5 4 10 4 12.5V17h4.5v-4.5H6.2C6.3 11 7 9.8 8.5 9Z" /><path d="M16 7.5c-2 1-3 2.5-3 5V17h4.5v-4.5h-2.3c.1-1.5.8-2.7 2.3-3.5Z" /></Svg>
+);
+export const IconClearFormat = (p: IconProps) => (
+  <Svg {...p}><path d="M5 4h9l-4 16" /><path d="M13 4h6" /><path d="m4 20 16-16" /></Svg>
+);
+export const IconPalette = (p: IconProps) => (
+  <Svg {...p}><path d="M12 3a9 8.5 0 1 0 0 17c1.1 0 2-.85 2-1.9 0-.5-.2-.95-.5-1.28-.3-.33-.5-.78-.5-1.27 0-1.05.9-1.9 2-1.9h1.7c1.8 0 3.3-1.4 3.3-3.15C19.5 6 16.1 3 12 3Z" /><circle cx="7.5" cy="10.5" r="1.1" fill="currentColor" stroke="none" /><circle cx="11" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="15.5" cy="8" r="1.1" fill="currentColor" stroke="none" /></Svg>
+);
+export const IconChevronSmall = (p: IconProps) => (
+  <Svg {...p}><path d="m6 9 6 6 6-6" /></Svg>
 );

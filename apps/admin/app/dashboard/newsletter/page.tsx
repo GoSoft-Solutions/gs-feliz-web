@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { contactsApi, contentApi, type ContentItem } from '../../../lib/api';
 import { composeHtml, EmailPreview, RichEditor } from '../../../components/email-editor';
 import { PageHeader } from '../../../components/page-header';
-import { IconMail, IconNewsletter } from '../../../components/icons';
+import { IconMail, IconNewsletter, IconSend } from '../../../components/icons';
 
 export default function NewsletterPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -133,7 +133,9 @@ export default function NewsletterPage() {
             )}
 
             <div className="flex gap-3 pt-4 border-t border-gray-100">
-              <button onClick={() => void sendEmail()} disabled={busy || !subject || !body} className="px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft font-medium disabled:opacity-50">{busy ? 'Enviando...' : 'Enviar ahora'}</button>
+              <button onClick={() => void sendEmail()} disabled={busy || !subject || !body} className="inline-flex items-center gap-2 px-4 py-2 bg-ink text-white text-sm rounded-lg hover:bg-ink-soft font-medium disabled:opacity-50">
+                {busy ? 'Enviando...' : <><IconSend size={15} /> Enviar ahora</>}
+              </button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300">Cancelar</button>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { contactsApi, campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
 import { composeHtml, decompose, EmailPreview, RichEditor } from '../../../components/email-editor';
 import { PageHeader } from '../../../components/page-header';
-import { IconCampaigns, IconCheck, IconCopy, IconEdit, IconEye, IconTrash } from '../../../components/icons';
+import { IconCampaigns, IconCheck, IconCopy, IconEdit, IconEye, IconSend, IconTrash } from '../../../components/icons';
 
 const SITE = 'https://danielcorral.com.mx';
 
@@ -359,11 +359,25 @@ export default function CampaignsPage() {
                     </div>
                     <code className="block text-xs leading-5 text-gray-700 font-mono break-all">{SITE}/news/{campaign.slug}</code>
                   </div>
-                  <div className="mt-auto pt-5 flex items-center justify-end gap-1 border-t border-gray-100">
-                    <select value={sendAudience[campaign.id] ?? 'ALL'} onChange={(event) => setSendAudience((current) => ({ ...current, [campaign.id]: event.target.value as 'ALL' | 'LEAD' | 'NEWSLETTER' }))} className="mr-auto max-w-[130px] px-2 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white" aria-label="Audiencia de envio">
-                      <option value="ALL">Todos</option><option value="LEAD">Leads</option><option value="NEWSLETTER">Newsletter</option>
-                    </select>
-                    <button onClick={() => void sendCampaign(campaign)} disabled={sendingId === campaign.id} title="Enviar campaña" aria-label="Enviar campaña" className="px-3 py-2 text-xs font-medium text-white bg-ink hover:bg-ink-soft rounded-lg disabled:opacity-50">{sendingId === campaign.id ? '...' : 'Enviar'}</button>
+                  <div className="mt-auto pt-5 flex items-center justify-end gap-1.5 border-t border-gray-100">
+                    {/* Grouped as one control: pick the audience, then hit
+                        send — the icon reads as "send to whoever's
+                        selected", not a generic action, so it never gets
+                        confused with the eye/edit/trash cluster. */}
+                    <div className="mr-auto flex items-center gap-0.5 rounded-lg border border-gray-200 bg-white pl-1">
+                      <select value={sendAudience[campaign.id] ?? 'ALL'} onChange={(event) => setSendAudience((current) => ({ ...current, [campaign.id]: event.target.value as 'ALL' | 'LEAD' | 'NEWSLETTER' }))} className="max-w-[110px] py-2 text-xs text-gray-600 bg-transparent border-none outline-none" aria-label="Audiencia de envío">
+                        <option value="ALL">Todos</option><option value="LEAD">Leads</option><option value="NEWSLETTER">Newsletter</option>
+                      </select>
+                      <button
+                        onClick={() => void sendCampaign(campaign)}
+                        disabled={sendingId === campaign.id}
+                        title="Enviar de forma masiva a la audiencia seleccionada"
+                        aria-label="Enviar de forma masiva a la audiencia seleccionada"
+                        className="m-0.5 p-2 text-white bg-ink hover:bg-ink-soft rounded-md transition disabled:opacity-50"
+                      >
+                        {sendingId === campaign.id ? <span className="block h-[17px] w-[17px] rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <IconSend size={17} />}
+                      </button>
+                    </div>
                     <button onClick={() => setPreviewId(campaign.id)} title="Ver correo" aria-label="Ver correo" className="p-2.5 text-orange hover:bg-orange/10 rounded-lg transition"><IconEye size={17} /></button>
                     <button onClick={() => startEdit(campaign)} title="Editar campaña" aria-label="Editar campaña" className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"><IconEdit size={17} /></button>
                     <button onClick={() => handleDelete(campaign.id)} disabled={busy} title="Eliminar campaña" aria-label="Eliminar campaña" className="p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"><IconTrash size={17} /></button>
