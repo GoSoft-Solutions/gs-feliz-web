@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { PrismaService } from '../../../database/prisma.service';
+import { EmailService } from '../../email/email.service';
 
 /**
  * Minimal mock shaped like the subset of PrismaService.contact /
@@ -31,7 +32,11 @@ describe('ContactsService', () => {
     prisma = createPrismaMock();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ContactsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ContactsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: EmailService, useValue: { send: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get(ContactsService);
@@ -85,7 +90,12 @@ describe('ContactsService', () => {
       expect(result).toBe(contact);
       expect(prisma.contact.findUnique).toHaveBeenCalledWith({
         where: { id: 'c1' },
-        include: { sources: true },
+        include: {
+          sources: {
+            orderBy: { createdAt: 'desc' },
+            include: { campaign: { select: { id: true, name: true, slug: true, source: true } } },
+          },
+        },
       });
     });
   });
