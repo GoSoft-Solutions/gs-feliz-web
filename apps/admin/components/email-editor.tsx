@@ -71,20 +71,23 @@ export function RichEditor({ value, onChange }: { value: string; onChange: (valu
 }
 
 export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl: string }) {
-  const hasStoredCta = html.includes(CTA_MARKER);
-  const previewHtml = html.replace(CTA_MARKER, '').replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
+  const storedCta = html.match(/<a\b[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i);
+  const visibleCta = cta || storedCta?.[2]?.replace(/<[^>]+>/g, '').trim() || '';
+  const visibleCtaUrl = ctaUrl || storedCta?.[1] || '#';
+  const previewHtml = html
+    .replace(CTA_MARKER, '')
+    .replace(/<p\b[^>]*>\s*<a\b[^>]*href\s*=\s*["'][^"']*["'][^>]*>[\s\S]*?<\/a>\s*<\/p>/i, '')
+    .replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
   return (
-    <div className="bg-[#f5f3ef] p-4 sm:p-7 border border-[#e8e2da] rounded-xl">
-      <div className="bg-white border border-[#e6e1da] rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
+    <div className="bg-[#f3f6fa] p-4 sm:p-8 border border-[#dbe5ef] rounded-xl">
+      <div className="bg-white border border-[#d5e0eb] rounded-2xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
         <div className="h-1.5 bg-[#F4711A]" />
-        <div className="bg-[#111827] px-6 py-8 text-center">
-          <p className="text-[#F4711A] text-[10px] font-semibold tracking-[0.35em] mb-2">DANIEL CORRAL</p>
-          <h2 className="text-white text-xl font-bold tracking-[0.22em]">CLARIDAD</h2>
-          <p className="text-white/50 text-[10px] tracking-[0.2em] mt-2">IDEAS PARA VIVIR CON INTENCIÓN</p>
+        <div className="bg-[#123B66] px-6 py-9 text-center">
+          <h2 className="text-white text-2xl font-bold tracking-[0.18em]">DANIEL CORRAL</h2>
         </div>
-        <div className="bg-white px-7 sm:px-10 pt-9 pb-11">
-          <div className="prose prose-sm max-w-none text-[#374151] leading-7 [&_p]:mb-5 [&_a]:text-[#F4711A] [&_a]:font-semibold" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-          {cta && !hasStoredCta && <div className="mt-9 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
+        <div className="bg-white px-8 sm:px-12 pt-10 pb-14">
+          <div className="prose prose-sm max-w-[500px] mx-auto text-[#374151] leading-7 [&_p]:mb-5 [&_a]:text-[#F4711A] [&_a]:font-semibold" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          {visibleCta && <div className="mt-12 mb-2 text-center"><a href={visibleCtaUrl} className="inline-block px-9 py-3.5 bg-[#F4711A] text-white font-bold rounded-lg text-sm no-underline shadow-md">{visibleCta}</a></div>}
         </div>
       </div>
     </div>

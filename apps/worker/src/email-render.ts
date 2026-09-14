@@ -53,10 +53,8 @@ function buildEmailDocument(body: string): string {
           <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e1da;border-radius:12px;overflow:hidden">
             <tr><td style="height:6px;background:#F4711A;font-size:0;line-height:0">&nbsp;</td></tr>
             <tr>
-              <td align="center" style="padding:32px 24px;background:#111827;color:#ffffff">
-                <div style="color:#F4711A;font-size:10px;font-weight:700;letter-spacing:4px;margin-bottom:8px">DANIEL CORRAL</div>
-                <div style="font-size:25px;font-weight:700;letter-spacing:5px">CLARIDAD</div>
-                <div style="color:#9ca3af;font-size:10px;letter-spacing:2px;margin-top:8px">IDEAS PARA VIVIR CON INTENCIÓN</div>
+              <td align="center" style="padding:36px 24px;background:#123B66;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:5px">
+                DANIEL CORRAL
               </td>
             </tr>
             <tr>
