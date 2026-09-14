@@ -109,6 +109,7 @@ export function authenticate(identifier: string, password: string): AdminSession
 
 export function getSession(): AdminSession | null {
   if (typeof window === 'undefined') return null;
+  if (!localStorage.getItem('feliz_token')) return null;
   const stored = localStorage.getItem(SESSION_KEY);
   if (stored) {
     try { return JSON.parse(stored) as AdminSession; } catch { /* reset below */ }
