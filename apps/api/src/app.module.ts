@@ -11,6 +11,7 @@ import { CoreModule } from './modules/core/core.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { PublicModule } from './modules/public/public.module';
 import { ContentModule } from './modules/content/content.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import type { EnvConfig } from '@feliz/config';
 
@@ -64,6 +65,7 @@ import type { EnvConfig } from '@feliz/config';
     IntegrationsModule,
     PublicModule,
     ContentModule,
+    AuthModule,
   ],
   providers: [
     {

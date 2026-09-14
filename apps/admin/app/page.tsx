@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authenticate } from '../lib/auth';
+import { authApi } from '../lib/api';
+import { saveApiSession } from '../lib/auth';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -9,11 +10,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authenticate(identifier, password)) {
+    try {
+      const result = await authApi.login(identifier, password);
+      saveApiSession(result.token, result.user);
       router.push('/dashboard');
-    } else {
+    } catch {
+      // Keep the message generic so the login does not reveal which field failed.
       setError('Credenciales incorrectas');
     }
   };

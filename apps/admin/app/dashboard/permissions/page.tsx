@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getSession, getUsers, permissionSections, saveUsers, type AdminRole, type AdminUser } from '../../../lib/auth';
+import { getSession, permissionSections, type AdminRole, type AdminUser } from '../../../lib/auth';
+import { authApi, type ApiAdminUser } from '../../../lib/api';
 
 function UserIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></svg>;
@@ -27,9 +28,11 @@ export default function PermissionsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const storedUsers = getUsers();
-    setUsers(storedUsers);
-    setSelectedEmail(storedUsers[1]?.email ?? storedUsers[0]?.email ?? '');
+    void authApi.users().then((storedUsers) => {
+      const mapped = storedUsers.map(mapUser);
+      setUsers(mapped);
+      setSelectedEmail(mapped[1]?.email ?? mapped[0]?.email ?? '');
+    }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudieron cargar los usuarios'));
   }, []);
 
   const selectedUser = users.find((user) => user.email === selectedEmail);
@@ -46,8 +49,9 @@ export default function PermissionsPage() {
   };
 
   const handleSave = () => {
-    saveUsers(users);
-    setSaved(true);
+    const user = users.find((candidate) => candidate.email === selectedEmail);
+    if (!user?.id) return;
+    void authApi.updateUser(user.id, { permissions: user.permissions, role: user.role === 'admin' ? 'ADMIN' : 'EDITOR' }).then(() => setSaved(true)).catch((e) => setError(e instanceof Error ? e.message : 'No se pudieron guardar los permisos'));
   };
 
   const createUser = () => {
@@ -68,13 +72,10 @@ export default function PermissionsPage() {
       role: form.role,
       permissions: form.role === 'admin' ? permissionSections.map((section) => section.href) : form.permissions,
     };
-    const nextUsers = [...users, newUser];
-    saveUsers(nextUsers);
-    setUsers(nextUsers);
-    setSelectedEmail(newUser.email);
-    setShowCreate(false);
-    setForm({ username: '', name: '', password: 'feliz2026', role: 'editor', permissions: [] });
-    setError('');
+    void authApi.createUser({ username: newUser.username, email: newUser.email, name: newUser.name, password: newUser.password, role: newUser.role === 'admin' ? 'ADMIN' : 'EDITOR', permissions: newUser.permissions }).then((created) => {
+      const mapped = mapUser(created);
+      setUsers((current) => [...current, mapped]); setSelectedEmail(mapped.email); setShowCreate(false); setForm({ username: '', name: '', password: 'feliz2026', role: 'editor', permissions: [] }); setError('');
+    }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo crear el usuario'));
   };
 
   const deleteUser = (user: AdminUser) => {
@@ -84,10 +85,8 @@ export default function PermissionsPage() {
       return;
     }
     if (!confirm(`¿Borrar al usuario ${user.name}?`)) return;
-    const nextUsers = users.filter((candidate) => candidate.email !== user.email);
-    saveUsers(nextUsers);
-    setUsers(nextUsers);
-    setSelectedEmail(nextUsers[0]?.email ?? '');
+    if (!user.id) return;
+    void authApi.removeUser(user.id).then(() => { const nextUsers = users.filter((candidate) => candidate.email !== user.email); setUsers(nextUsers); setSelectedEmail(nextUsers[0]?.email ?? ''); }).catch((e) => setError(e instanceof Error ? e.message : 'No se pudo borrar el usuario'));
   };
 
   const toggleNewPermission = (href: AdminUser['permissions'][number], enabled: boolean) => {
@@ -189,4 +188,8 @@ export default function PermissionsPage() {
       </div>
     </div>
   );
+}
+
+function mapUser(user: ApiAdminUser): AdminUser {
+  return { id: user.id, username: user.username, email: user.email, name: user.name, password: '', role: user.role === 'ADMIN' ? 'admin' : 'editor', permissions: user.permissions as AdminUser['permissions'] };
 }

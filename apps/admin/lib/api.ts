@@ -9,10 +9,12 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000
 const BASE = `${API_URL}/api/v1`;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('feliz_token') : null;
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers ?? {}),
     },
     cache: 'no-store',
@@ -33,6 +35,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
 }
+
+export interface ApiAdminUser { id: string; username: string; email: string; name: string; role: 'ADMIN' | 'EDITOR'; permissions: string[] }
+export const authApi = {
+  login: (identifier: string, password: string) => request<{ token: string; user: ApiAdminUser }>('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) }),
+  users: () => request<ApiAdminUser[]>('/auth/users'),
+  createUser: (data: { username: string; email: string; name: string; password: string; role: 'ADMIN' | 'EDITOR'; permissions: string[] }) => request<ApiAdminUser>('/auth/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id: string, data: { name?: string; password?: string; role?: 'ADMIN' | 'EDITOR'; permissions?: string[] }) => request<ApiAdminUser>(`/auth/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  removeUser: (id: string) => request<{ success: boolean }>(`/auth/users/${id}`, { method: 'DELETE' }),
+};
 
 // ---- Types (mirror the API responses) ----
 export interface Contact {

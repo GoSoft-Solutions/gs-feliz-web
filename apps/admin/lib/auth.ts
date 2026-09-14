@@ -12,6 +12,7 @@ export type PermissionKey =
   | '/dashboard/permissions';
 
 export interface AdminUser {
+  id?: string;
   username: string;
   email: string;
   name: string;
@@ -122,6 +123,15 @@ export function getSession(): AdminSession | null {
 export function clearSession(): void {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem('feliz_auth');
+  localStorage.removeItem('feliz_token');
+}
+
+export function saveApiSession(token: string, user: { id: string; username: string; email: string; name: string; role: 'ADMIN' | 'EDITOR'; permissions: string[] }): AdminSession {
+  const session: AdminSession = { username: user.username, email: user.email, name: user.name, role: user.role === 'ADMIN' ? 'admin' : 'editor', permissions: user.permissions as PermissionKey[] };
+  localStorage.setItem('feliz_token', token);
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem('feliz_auth', 'true');
+  return session;
 }
 
 export function canAccess(session: AdminSession, path: string): boolean {

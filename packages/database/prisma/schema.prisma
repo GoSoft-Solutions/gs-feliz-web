@@ -40,6 +40,25 @@ enum ContentStatus {
   ARCHIVED
 }
 
+enum AdminRole {
+  ADMIN
+  EDITOR
+}
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  username     String    @unique
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(EDITOR)
+  permissions  Json      @default("[]") @db.JsonB
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
 /// A person known to FELIZ, regardless of source or whether they have a
 /// user account yet. This is the central identity entity of the platform.
 model Contact {
