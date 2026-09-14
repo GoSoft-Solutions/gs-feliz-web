@@ -74,15 +74,17 @@ export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string;
   const hasStoredCta = html.includes(CTA_MARKER);
   const previewHtml = html.replace(CTA_MARKER, '').replace(/\{\{\s*nombre\s*\}\}/g, 'Israel');
   return (
-    <div className="bg-[#f3f4f6] p-3 sm:p-6 border border-gray-200 rounded-xl">
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
-        <div className="bg-gray-900 px-6 py-7 text-center"><h2 className="text-white text-xl font-bold tracking-[0.25em]">DANIEL CORRAL</h2></div>
-        <div className="bg-white px-6 sm:px-8 pt-8 pb-11">
-          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-          {cta && !hasStoredCta && <div className="mt-10 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
+    <div className="bg-[#f5f3ef] p-4 sm:p-7 border border-[#e8e2da] rounded-xl">
+      <div className="bg-white border border-[#e6e1da] rounded-xl overflow-hidden shadow-sm max-w-[600px] mx-auto">
+        <div className="h-1.5 bg-[#F4711A]" />
+        <div className="bg-[#111827] px-6 py-8 text-center">
+          <p className="text-[#F4711A] text-[10px] font-semibold tracking-[0.35em] mb-2">DANIEL CORRAL</p>
+          <h2 className="text-white text-xl font-bold tracking-[0.22em]">CLARIDAD</h2>
+          <p className="text-white/50 text-[10px] tracking-[0.2em] mt-2">IDEAS PARA VIVIR CON INTENCIÓN</p>
         </div>
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-center text-xs leading-relaxed text-gray-400">
-          danielcorral.com.mx
+        <div className="bg-white px-7 sm:px-10 pt-9 pb-11">
+          <div className="prose prose-sm max-w-none text-[#374151] leading-7 [&_p]:mb-5 [&_a]:text-[#F4711A] [&_a]:font-semibold" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          {cta && !hasStoredCta && <div className="mt-9 text-center"><a href={ctaUrl || '#'} className="inline-block px-8 py-3 bg-[#F4711A] text-white font-semibold rounded-lg text-sm no-underline shadow-md">{cta}</a></div>}
         </div>
       </div>
     </div>
