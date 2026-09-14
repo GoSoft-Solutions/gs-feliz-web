@@ -83,8 +83,8 @@ export function RichEditor({ value, onChange }: { value: string; onChange: (valu
 /**
  * Mirrors the branded template the API actually sends
  * (apps/api/src/modules/email/email-render.util.ts) so what the client
- * sees here is what lands in the inbox — same colors, spacing and the
- * automatic footer, not just an approximation.
+ * sees here is what lands in the inbox — same colors and spacing, not
+ * just an approximation.
  */
 export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string; ctaUrl: string }) {
   const storedCta = html.match(/<a\b[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i);
@@ -97,14 +97,13 @@ export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string;
 
   return (
     <div className="bg-[#EEF1F5] p-4 sm:p-10 rounded-2xl">
-      <div className="bg-white rounded-[20px] overflow-hidden shadow-[0_1px_3px_rgba(18,59,102,0.15)] max-w-[600px] mx-auto">
-        <div className="h-[5px] bg-[#F4711A]" />
-        <div className="bg-[#123B66] px-6 py-11 text-center">
-          <span className="inline-block text-white text-2xl font-bold tracking-[6px]">DANIEL CORRAL</span>
+      <div className="bg-white rounded-[20px] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.15)] max-w-[600px] mx-auto">
+        <div className="bg-[#0A0A0A] px-6 py-11 text-center">
+          <span className="inline-block text-[#F0EDE6] text-2xl font-bold tracking-[6px]">DANIEL CORRAL</span>
         </div>
         <div className="bg-white px-8 sm:px-10 pt-11 pb-12">
           <div
-            className="prose prose-sm max-w-none text-[#374151] [&_*]:max-w-full [&_p]:mb-5 [&_p]:leading-[1.75] [&_p]:text-[15px] [&_h1]:mt-0 [&_h2]:mt-7 [&_h2]:mb-4 [&_h2]:text-[#123B66] [&_h3]:mt-7 [&_h3]:mb-3.5 [&_h3]:text-[18px] [&_h3]:font-bold [&_h3]:text-[#123B66] [&_ul]:mb-5 [&_ul]:pl-5 [&_li]:mb-2.5 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[#F4711A] [&_blockquote]:bg-[#FAF7F2] [&_blockquote]:not-italic [&_blockquote]:py-2 [&_blockquote]:px-4 [&_a]:text-[#F4711A] [&_a]:font-semibold [&_a]:no-underline"
+            className="prose prose-sm max-w-none text-[#222222] [&_*]:max-w-full [&_p]:mb-5 [&_p]:leading-[1.75] [&_p]:text-[15px] [&_h1]:mt-0 [&_h2]:mt-7 [&_h2]:mb-4 [&_h2]:text-[#0A0A0A] [&_h3]:mt-7 [&_h3]:mb-3.5 [&_h3]:text-[18px] [&_h3]:font-bold [&_h3]:text-[#0A0A0A] [&_ul]:mb-5 [&_ul]:pl-5 [&_li]:mb-2.5 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[#F4711A] [&_blockquote]:bg-[#FAF7F2] [&_blockquote]:not-italic [&_blockquote]:py-2 [&_blockquote]:px-4 [&_a]:text-[#F4711A] [&_a]:font-semibold [&_a]:no-underline"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
           {visibleCta && (

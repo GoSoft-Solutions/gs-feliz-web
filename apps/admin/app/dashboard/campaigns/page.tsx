@@ -324,15 +324,18 @@ export default function CampaignsPage() {
 
       {previewCampaign && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-100 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center">
+          {/* max-h + flex column so a long email scrolls INSIDE the card
+              instead of growing the card past the viewport — the header
+              (with the close button) always stays visible and reachable. */}
+          <div className="bg-gray-100 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="p-4 bg-white border-b border-gray-200 flex justify-between items-center shrink-0">
               <div>
                 <h3 className="font-semibold text-gray-800 text-sm">{previewCampaign.name}</h3>
                 <p className="text-xs text-gray-500">Asunto: {previewCampaign.emailSubject}</p>
               </div>
               <button onClick={() => setPreviewId(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400">x</button>
             </div>
-            <div className="p-4"><EmailPreview html={previewCampaign.emailHtml ?? ''} cta="" ctaUrl="" /></div>
+            <div className="p-4 overflow-y-auto flex-1 min-h-0"><EmailPreview html={previewCampaign.emailHtml ?? ''} cta="" ctaUrl="" /></div>
           </div>
         </div>
       )}
