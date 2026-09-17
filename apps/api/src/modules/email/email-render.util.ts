@@ -1,4 +1,5 @@
 import type { OutboundEmail } from './email.types';
+import { buildUnsubscribeUrl } from './unsubscribe.util';
 
 export interface CampaignEmailSource {
   emailSubject: string | null;
@@ -47,7 +48,7 @@ export function renderCampaignEmail(
   };
 
   const body = applyTokens(campaign.emailHtml, tokens);
-  const html = buildEmailDocument(body);
+  const html = buildEmailDocument(body, subscriber.email);
 
   return {
     to: subscriber.email,
@@ -62,6 +63,9 @@ export function renderCampaignEmail(
  * Wraps a body of rich-text HTML (as produced by the admin's campaign and
  * newsletter editor) into a complete, branded HTML email document.
  *
+ * `recipientEmail` is optional and only used to build a working, discreet
+ * unsubscribe link in the footer (omitted → no footer at all).
+ *
  * Two things make the delivered email match the admin's preview instead
  * of arriving unstyled:
  *  1. Every wrapper element is a table with fully INLINE styles. Real
@@ -74,7 +78,7 @@ export function renderCampaignEmail(
  *     touching anything that already carries its own (e.g. the CTA button
  *     built by the admin's composeHtml()).
  */
-export function buildEmailDocument(body: string): string {
+export function buildEmailDocument(body: string, recipientEmail?: string): string {
   const styledBody = styleContent(body);
   // body's text is already HTML-escaped (it comes from contentEditable's
   // innerHTML), so the tag-stripped preheader needs no re-escaping.
@@ -105,11 +109,40 @@ export function buildEmailDocument(body: string): string {
               </td>
             </tr>
           </table>
+          ${buildFooter(recipientEmail)}
         </td>
       </tr>
     </table>
   </body>
 </html>`;
+}
+
+/**
+ * A deliberately discreet footer — small, muted, one line. Just the
+ * unsubscribe mechanism (good practice, and something Gmail/Yahoo weigh
+ * favorably for inbox placement), not a branding block.
+ */
+function buildFooter(recipientEmail?: string): string {
+  const unsubscribeUrl = recipientEmail ? safeUnsubscribeUrl(recipientEmail) : null;
+  if (!unsubscribeUrl) return '';
+  return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
+            <tr>
+              <td align="center" style="padding:18px 24px 0;font-size:11px;line-height:1.6;color:#ACA9A2">
+                <a href="${unsubscribeUrl}" style="color:#ACA9A2;text-decoration:underline">Darme de baja de estos correos</a>
+              </td>
+            </tr>
+          </table>`;
+}
+
+/** Never let a malformed/missing secret break email sending. */
+function safeUnsubscribeUrl(email: string): string | null {
+  try {
+    const secret = process.env.UNSUBSCRIBE_SECRET || 'feliz-unsubscribe-dev-secret';
+    const apiUrl = process.env.PUBLIC_API_URL || 'https://api.danielcorral.com.mx';
+    return buildUnsubscribeUrl(apiUrl, email, secret);
+  } catch {
+    return null;
+  }
 }
 
 /** Short plain-text snippet shown by inbox clients next to the subject line. */

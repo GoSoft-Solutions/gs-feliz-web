@@ -208,7 +208,7 @@ export class ContactsService {
     for (const contact of contacts) {
       if (!contact.email) continue;
       const subject = applyTokens(dto.subject, contact);
-      const html = buildEmailDocument(applyTokens(dto.html, contact));
+      const html = buildEmailDocument(applyTokens(dto.html, contact), contact.email);
       await this.email.send({ to: contact.email, subject, html, fromName: dto.fromName });
       await this.prisma.contactEvent.create({
         data: { contactId: contact.id, eventType: 'EMAIL_SENT', campaignId: dto.campaignId, source: 'bulk', metadata: { subject, audience: dto.audience } },

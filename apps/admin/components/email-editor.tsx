@@ -464,6 +464,9 @@ export function EmailPreview({ html, cta, ctaUrl }: { html: string; cta: string;
           )}
         </div>
       </div>
+      <p className="max-w-[600px] mx-auto mt-3 text-center text-[10px] text-[#ACA9A2] underline">
+        Darme de baja de estos correos
+      </p>
     </div>
   );
 }

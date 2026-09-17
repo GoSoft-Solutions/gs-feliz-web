@@ -1,3 +1,5 @@
+import { buildUnsubscribeUrl } from './unsubscribe-util';
+
 /**
  * Renders a campaign's stored welcome email into a concrete email for a
  * subscriber. Mirrors apps/api/src/modules/email/email-render.util.ts so
@@ -47,13 +49,13 @@ export function renderCampaignEmail(
   return {
     to: subscriber.email,
     subject: applyTokens(campaign.emailSubject, tokens),
-    html: buildEmailDocument(applyTokens(campaign.emailHtml, tokens)),
+    html: buildEmailDocument(applyTokens(campaign.emailHtml, tokens), subscriber.email),
     fromName: campaign.emailFromName ?? undefined,
     replyTo: campaign.emailReplyTo ?? undefined,
   };
 }
 
-function buildEmailDocument(body: string): string {
+function buildEmailDocument(body: string, recipientEmail?: string): string {
   const styledBody = styleContent(body);
   const preheader = buildPreheader(body);
 
@@ -82,11 +84,34 @@ function buildEmailDocument(body: string): string {
               </td>
             </tr>
           </table>
+          ${buildFooter(recipientEmail)}
         </td>
       </tr>
     </table>
   </body>
 </html>`;
+}
+
+function buildFooter(recipientEmail?: string): string {
+  const unsubscribeUrl = recipientEmail ? safeUnsubscribeUrl(recipientEmail) : null;
+  if (!unsubscribeUrl) return '';
+  return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
+            <tr>
+              <td align="center" style="padding:18px 24px 0;font-size:11px;line-height:1.6;color:#ACA9A2">
+                <a href="${unsubscribeUrl}" style="color:#ACA9A2;text-decoration:underline">Darme de baja de estos correos</a>
+              </td>
+            </tr>
+          </table>`;
+}
+
+function safeUnsubscribeUrl(email: string): string | null {
+  try {
+    const secret = process.env.UNSUBSCRIBE_SECRET || 'feliz-unsubscribe-dev-secret';
+    const apiUrl = process.env.PUBLIC_API_URL || 'https://api.danielcorral.com.mx';
+    return buildUnsubscribeUrl(apiUrl, email, secret);
+  } catch {
+    return null;
+  }
 }
 
 function buildPreheader(body: string): string {
