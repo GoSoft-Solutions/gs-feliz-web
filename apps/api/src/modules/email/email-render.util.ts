@@ -128,7 +128,7 @@ function buildFooter(recipientEmail?: string): string {
   return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
             <tr>
               <td align="center" style="padding:18px 24px 0;font-size:11px;line-height:1.6;color:#ACA9A2">
-                <a href="${unsubscribeUrl}" style="color:#ACA9A2;text-decoration:underline">Darme de baja de estos correos</a>
+                <a href="${unsubscribeUrl}" style="color:#ACA9A2;text-decoration:none">Cancelar suscripción</a>
               </td>
             </tr>
           </table>`;
