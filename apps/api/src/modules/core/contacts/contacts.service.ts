@@ -175,7 +175,7 @@ export class ContactsService {
     await this.email.send({
       to: contact.email,
       subject: applyTokens(dto.subject),
-      html: applyTokens(dto.html),
+      html: buildEmailDocument(applyTokens(dto.html), contact.email),
       fromName: dto.fromName,
     });
 

@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { contactsApi, type Contact } from '../../../lib/api';
 import { PageHeader } from '../../../components/page-header';
 import { IconChevron, IconContacts, IconEdit, IconHistory, IconMail, IconSearch, IconTrash } from '../../../components/icons';
+import { EmailPreview, RichEditor } from '../../../components/email-editor';
 
 function fullName(c: Contact): string {
   const name = [c.firstName, c.lastName].filter(Boolean).join(' ');
@@ -121,9 +122,7 @@ export default function ContactsPage() {
     setSending(true);
     setError('');
     try {
-      // Plain text newlines -> <br> so the message keeps its line breaks.
-      const html = body.replace(/\n/g, '<br/>');
-      await contactsApi.sendEmail(emailTarget.id, { subject: subject.trim(), html });
+      await contactsApi.sendEmail(emailTarget.id, { subject: subject.trim(), html: body });
       setToast(`Correo enviado a ${emailTarget.email}`);
       setEmailTarget(null);
       setTimeout(() => setToast(''), 4000);
@@ -167,7 +166,11 @@ export default function ContactsPage() {
       {error && !emailTarget && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full">
+        {/* Scrolls horizontally on its own (discreet native scrollbar)
+            instead of letting the table squish or spill past the card —
+            min-w keeps every column readable, no matter the screen. */}
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px]">
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
@@ -268,20 +271,25 @@ export default function ContactsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
-      {/* Email composer modal */}
+      {/* Email composer modal — same rich editor as Campañas/Newsletter, so
+          composing a one-off note looks and feels identical, and (via
+          buildEmailDocument on the backend) actually arrives styled. */}
       {emailTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">Enviar correo</h2>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Enviar correo</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Para: <span className="font-medium text-gray-800">{fullName(emailTarget)}</span> &lt;{emailTarget.email}&gt;
+                </p>
+              </div>
               <button onClick={() => setEmailTarget(null)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
             </div>
-            <div className="px-6 py-4 space-y-4">
-              <p className="text-sm text-gray-500">
-                Para: <span className="font-medium text-gray-800">{fullName(emailTarget)}</span> &lt;{emailTarget.email}&gt;
-              </p>
+            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Asunto</label>
                 <input
@@ -294,18 +302,17 @@ export default function ContactsPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Mensaje</label>
-                <textarea
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  rows={8}
-                  placeholder="Escribe tu mensaje... Puedes usar {{nombre}} para personalizar."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange outline-none text-sm resize-y"
-                />
-                <p className="text-xs text-gray-400 mt-1">Consejo: usa {'{{nombre}}'} y {'{{email}}'} para personalizar.</p>
+                <RichEditor value={body} onChange={setBody} />
               </div>
+              {body && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Previsualización</h4>
+                  <div className="max-w-md mx-auto"><EmailPreview html={body} cta="" ctaUrl="" /></div>
+                </div>
+              )}
               {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100 shrink-0">
               <button
                 onClick={() => setEmailTarget(null)}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
