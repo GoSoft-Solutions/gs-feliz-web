@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { contactsApi, campaignsApi, contentApi, type Campaign, type ContentItem } from '../../../lib/api';
 import { composeHtml, decompose, EmailPreview, RichEditor } from '../../../components/email-editor';
 import { PageHeader } from '../../../components/page-header';
-import { IconCampaigns, IconCheck, IconCopy, IconEdit, IconEye, IconSend, IconTrash } from '../../../components/icons';
+import { IconCampaigns, IconCheck, IconCopy, IconEdit, IconEye, IconPause, IconPlay, IconSend, IconTrash } from '../../../components/icons';
 
 const SITE = 'https://danielcorral.com.mx';
 
@@ -37,6 +37,7 @@ export default function CampaignsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sendAudience, setSendAudience] = useState<Record<string, 'ALL' | 'LEAD' | 'NEWSLETTER'>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
   const load = async () => {
@@ -147,6 +148,23 @@ export default function CampaignsPage() {
       setError(e instanceof Error ? e.message : 'Error al eliminar campana');
     } finally {
       setBusy(false);
+    }
+  };
+
+  /** Toggles ACTIVE <-> PAUSED. A paused campaign's public link stops
+   * working (enforced server-side, not just hidden in this UI) until it's
+   * activated again. */
+  const toggleStatus = async (campaign: Campaign) => {
+    const nextStatus = campaign.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    setTogglingId(campaign.id);
+    setError('');
+    try {
+      await campaignsApi.update(campaign.id, { status: nextStatus });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cambiar el estado de la campaña');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -342,7 +360,18 @@ export default function CampaignsPage() {
                       <h3 className="text-lg font-semibold text-gray-800 truncate" title={campaign.name}>{campaign.name}</h3>
                       <p className="text-sm text-gray-500 mt-1">{campaign.source ?? 'Sin fuente'}</p>
                     </div>
-                    <span className="shrink-0 inline-flex px-2 py-1 text-[11px] font-semibold tracking-wide bg-green-50 text-green-700 rounded-full">{campaign.status}</span>
+                    <div className="shrink-0 flex items-center gap-1.5">
+                      <span className={`inline-flex px-2 py-1 text-[11px] font-semibold tracking-wide rounded-full ${campaign.status === 'ACTIVE' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{campaign.status}</span>
+                      <button
+                        onClick={() => void toggleStatus(campaign)}
+                        disabled={togglingId === campaign.id}
+                        title={campaign.status === 'ACTIVE' ? 'Desactivar campaña (su link deja de funcionar)' : 'Activar campaña (su link vuelve a funcionar)'}
+                        aria-label={campaign.status === 'ACTIVE' ? 'Desactivar campaña' : 'Activar campaña'}
+                        className={`p-1.5 rounded-md transition disabled:opacity-40 ${campaign.status === 'ACTIVE' ? 'text-gray-500 hover:text-red-600 hover:bg-red-50' : 'text-gray-500 hover:text-green-700 hover:bg-green-50'}`}
+                      >
+                        {campaign.status === 'ACTIVE' ? <IconPause size={15} /> : <IconPlay size={15} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50/80 p-3">
                     <div className="flex items-center justify-between gap-2 mb-2">

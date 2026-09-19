@@ -1,5 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@feliz/database';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Prisma, type Campaign } from '@feliz/database';
 import { PrismaService } from '../../database/prisma.service';
 import { normalizeEmail } from '../../common/utils/normalize-email.util';
 import { EmailService } from '../email/email.service';
@@ -62,6 +62,30 @@ export class PublicService {
     return { success: true };
   }
 
+  /**
+   * Resolves a campaign for its public capture page — only when it's
+   * ACTIVE. A slug that doesn't exist and a real campaign that's been
+   * paused/archived/left in DRAFT look identical from the outside (both
+   * 404): a deactivated campaign's link is meant to stop working, not
+   * degrade to "exists but disabled".
+   */
+  async getActiveCampaign(slug: string): Promise<{ name: string; slug: string }> {
+    const campaign = await this.prisma.campaign.findUnique({ where: { slug } });
+    if (!campaign || campaign.status !== 'ACTIVE') {
+      throw new NotFoundException('This campaign link is not available');
+    }
+    return { name: campaign.name, slug: campaign.slug };
+  }
+
+  /** Lets a capture page skip asking for a name when the email already
+   * belongs to a known contact. */
+  async checkEmailExists(rawEmail: string): Promise<{ exists: boolean }> {
+    const email = normalizeEmail(rawEmail);
+    if (!email) return { exists: false };
+    const contact = await this.prisma.contact.findUnique({ where: { email }, select: { id: true } });
+    return { exists: Boolean(contact) };
+  }
+
   async subscribe(dto: SubscribeDto): Promise<SubscribeResult> {
     const email = normalizeEmail(dto.email);
     if (!email) {
@@ -69,14 +93,17 @@ export class PublicService {
       throw new Error('A valid email is required');
     }
 
-    const campaign = dto.campaignSlug
-      ? await this.prisma.campaign.findUnique({ where: { slug: dto.campaignSlug } })
-      : null;
-
-    if (dto.campaignSlug && !campaign) {
-      this.logger.warn('subscribe with unknown campaign slug — proceeding without association', {
-        slug: dto.campaignSlug,
-      });
+    // A campaign-specific link only works while that campaign is ACTIVE —
+    // same rule as getActiveCampaign() above, enforced again here so
+    // deactivating a campaign actually stops its link from working even
+    // if someone posts to this endpoint directly (not just through the
+    // capture page's own existence check).
+    let campaign: Campaign | null = null;
+    if (dto.campaignSlug) {
+      campaign = await this.prisma.campaign.findUnique({ where: { slug: dto.campaignSlug } });
+      if (!campaign || campaign.status !== 'ACTIVE') {
+        throw new NotFoundException('This campaign link is not available');
+      }
     }
 
     const { contact, isNew } = await this.prisma.$transaction(async (tx) => {

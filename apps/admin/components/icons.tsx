@@ -123,6 +123,12 @@ export const IconTrendingUp = (p: IconProps) => (
 export const IconSend = (p: IconProps) => (
   <Svg {...p}><path d="m22 2-11 11" /><path d="M22 2 15 22l-4-9-9-4Z" /></Svg>
 );
+export const IconPause = (p: IconProps) => (
+  <Svg {...p}><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></Svg>
+);
+export const IconPlay = (p: IconProps) => (
+  <Svg {...p}><path d="M7 4.5v15l13-7.5Z" strokeLinejoin="round" /></Svg>
+);
 
 // --- Rich-text editor toolbar -----------------------------------------------
 export const IconUndo = (p: IconProps) => (

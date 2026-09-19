@@ -1,47 +1,112 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
+type CampaignState = 'loading' | 'found' | 'not-found';
+type Step = 'email' | 'name';
+
 export default function CampaignNewsletterPage() {
   const params = useParams();
   const slug = params.slug as string;
+
+  const [campaignState, setCampaignState] = useState<CampaignState>('loading');
+  const [campaignName, setCampaignName] = useState('');
+
+  const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [nombre, setNombre] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
+  // The link only works while the campaign it points to actually exists
+  // AND is active — a fake slug and a deactivated campaign look identical
+  // from here (both "not-found"), matching what the API itself enforces.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/api/v1/public/campaigns/${encodeURIComponent(slug)}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data: { name: string }) => {
+        if (cancelled) return;
+        setCampaignName(data.name);
+        setCampaignState('found');
+      })
+      .catch(() => {
+        if (!cancelled) setCampaignState('not-found');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const submit = async (nameValue?: string) => {
+    setSubmitting(true);
     setError('');
     try {
       const res = await fetch(`${API_URL}/api/v1/public/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, nombre: nombre || undefined, campaignSlug: slug }),
+        body: JSON.stringify({ email, nombre: nameValue || undefined, campaignSlug: slug }),
       });
       if (!res.ok) throw new Error('request failed');
       setSubmitted(true);
     } catch {
       setError('No pudimos registrar tu correo. Intenta de nuevo.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const campaignName = slug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  // Step 1: only the email. A known contact sends right away; a new one
+  // gets asked for their name first (step 2) — never both fields up front.
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setChecking(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/v1/public/check-email?email=${encodeURIComponent(email)}`);
+      const data = (await res.json()) as { exists: boolean };
+      if (data.exists) {
+        await submit();
+      } else {
+        setStep('name');
+      }
+    } catch {
+      setError('Algo salió mal. Intenta de nuevo.');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submit(nombre);
+  };
+
+  if (campaignState === 'loading') {
+    return <main style={styles.page} />;
+  }
+
+  if (campaignState === 'not-found') {
+    return (
+      <main style={styles.page}>
+        <div style={styles.glow} />
+        <section style={styles.content}>
+          <h1 style={styles.brand}>DANIEL CORRAL</h1>
+          <p style={styles.notFoundText}>Este enlace ya no está disponible.</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main style={styles.page}>
       <div style={styles.glow} />
-      <section style={styles.card}>
+      <section style={styles.content}>
         <span style={styles.kicker}>ACCESO EXCLUSIVO</span>
         <h1 style={styles.brand}>DANIEL CORRAL</h1>
 
@@ -49,48 +114,48 @@ export default function CampaignNewsletterPage() {
           <>
             <div style={styles.campaignBadge}>{campaignName}</div>
 
-            <p style={styles.lead}>
-              Deja tus datos y recibe el contenido al instante en tu correo.
-            </p>
+            <p style={styles.lead}>Deja tu correo y recibe el contenido al instante.</p>
 
-            <form onSubmit={handleSubmit} style={styles.form}>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Tu nombre"
-                style={styles.input}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#F4711A')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(240,237,230,0.12)')}
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="tucorreo@ejemplo.com"
-                style={styles.input}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#F4711A')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(240,237,230,0.12)')}
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                style={{ ...styles.button, ...(loading ? styles.buttonLoading : {}) }}
-                onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#FF8C35'; }}
-                onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#F4711A'; }}
-              >
-                {loading ? 'Enviando...' : 'Quiero mi acceso'}
-              </button>
-            </form>
+            {step === 'email' ? (
+              <form onSubmit={handleEmailSubmit} style={styles.form}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                  placeholder="tucorreo@ejemplo.com"
+                  style={styles.input}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#F4711A')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(240,237,230,0.14)')}
+                />
+                <button type="submit" disabled={checking} style={{ ...styles.button, ...(checking ? styles.buttonLoading : {}) }}>
+                  {checking ? 'Un momento...' : 'Continuar'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleNameSubmit} style={styles.form}>
+                <p style={styles.emailConfirm}>
+                  {email} <button type="button" onClick={() => setStep('email')} style={styles.changeLink}>cambiar</button>
+                </p>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
+                  autoFocus
+                  placeholder="Tu nombre"
+                  style={styles.input}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = '#F4711A')}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(240,237,230,0.14)')}
+                />
+                <button type="submit" disabled={submitting} style={{ ...styles.button, ...(submitting ? styles.buttonLoading : {}) }}>
+                  {submitting ? 'Enviando...' : 'Quiero mi acceso'}
+                </button>
+              </form>
+            )}
 
             {error && <p style={styles.error}>{error}</p>}
-
-            <div style={styles.trust}>
-              <span style={styles.trustItem}>✓ Acceso inmediato</span>
-              <span style={styles.trustDot}>•</span>
-              <span style={styles.trustItem}>✓ Sin spam</span>
-            </div>
           </>
         ) : (
           <div style={{ animation: 'fadeIn 0.4s ease' }}>
@@ -132,17 +197,14 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'radial-gradient(circle, rgba(244,113,26,0.14) 0%, transparent 60%)',
     pointerEvents: 'none',
   },
-  card: {
-    maxWidth: '460px',
+  // Flat — no card, no border, no glass/blur. The content just sits on
+  // the page; nothing "encloses" the fields.
+  content: {
+    maxWidth: '400px',
     width: '100%',
     textAlign: 'center',
     position: 'relative',
     zIndex: 1,
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(240,237,230,0.06)',
-    borderRadius: '24px',
-    padding: '48px 36px',
-    backdropFilter: 'blur(8px)',
   },
   kicker: { color: '#F4711A', fontSize: '12px', fontWeight: 700, letterSpacing: '3px' },
   brand: {
@@ -167,50 +229,61 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
   },
   lead: {
-    color: 'rgba(240,237,230,0.6)',
+    color: 'rgba(240,237,230,0.55)',
     fontSize: '16px',
     lineHeight: 1.65,
     marginBottom: '28px',
   },
   form: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  emailConfirm: {
+    color: 'rgba(240,237,230,0.5)',
+    fontSize: '13px',
+    margin: '-4px 0 2px',
+    textAlign: 'left',
+  },
+  changeLink: {
+    background: 'none',
+    border: 'none',
+    color: '#F4711A',
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: 0,
+    marginLeft: '6px',
+    fontFamily: 'inherit',
+  },
   input: {
     width: '100%',
-    padding: '16px 20px',
-    background: '#151515',
-    border: '1px solid rgba(240,237,230,0.12)',
-    borderRadius: '14px',
+    padding: '16px 0',
+    background: 'transparent',
+    border: 'none',
+    borderBottom: '1px solid rgba(240,237,230,0.14)',
+    borderRadius: 0,
     color: '#F0EDE6',
-    fontSize: '15px',
+    fontSize: '16px',
     fontFamily: 'inherit',
     outline: 'none',
     transition: 'border-color 0.2s',
     boxSizing: 'border-box',
+    textAlign: 'center',
   },
   button: {
     width: '100%',
     padding: '16px 20px',
     background: '#F4711A',
     border: 'none',
-    borderRadius: '14px',
+    borderRadius: '999px',
     color: '#0A0A0A',
     fontSize: '15px',
     fontWeight: 700,
     fontFamily: 'inherit',
     cursor: 'pointer',
     transition: 'background 0.2s',
+    marginTop: '8px',
   },
   buttonLoading: { background: 'rgba(244,113,26,0.5)', cursor: 'default' },
-  error: { color: '#FF6B6B', fontSize: '13px', marginTop: '12px' },
-  trust: {
-    display: 'flex',
-    gap: '10px',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: '20px',
-    flexWrap: 'wrap',
-  },
-  trustItem: { color: 'rgba(240,237,230,0.4)', fontSize: '12px' },
-  trustDot: { color: 'rgba(240,237,230,0.2)', fontSize: '12px' },
+  error: { color: '#FF6B6B', fontSize: '13px', marginTop: '16px' },
+  notFoundText: { color: 'rgba(240,237,230,0.5)', fontSize: '16px', lineHeight: 1.6, marginTop: '4px' },
   checkCircle: {
     width: '64px',
     height: '64px',

@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Header, HttpCode, HttpStatus, Inject, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Inject, Param, Post, Query } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { EnvConfig } from '@feliz/config';
 import { ENV_CONFIG } from '../../config/app-config.module';
 import { PublicService } from './public.service';
 import { SubscribeDto } from './dto/subscribe.dto';
+import { CheckEmailQueryDto } from './dto/check-email-query.dto';
 import { verifyUnsubscribeToken } from '../email/unsubscribe.util';
 
 /**
@@ -28,6 +29,30 @@ export class PublicController {
   })
   subscribe(@Body() dto: SubscribeDto): ReturnType<PublicService['subscribe']> {
     return this.publicService.subscribe(dto);
+  }
+
+  /**
+   * Resolves a campaign for its capture page (/news/<slug>) — 404 when the
+   * slug doesn't exist OR the campaign isn't ACTIVE, so a fake slug and a
+   * deliberately deactivated campaign behave identically: the link just
+   * doesn't work.
+   */
+  @Get('campaigns/:slug')
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
+  @ApiOperation({ summary: 'Resolve an active campaign by slug for its public capture page' })
+  getCampaign(@Param('slug') slug: string): ReturnType<PublicService['getActiveCampaign']> {
+    return this.publicService.getActiveCampaign(slug);
+  }
+
+  /**
+   * Lets a capture page skip the name field for a returning contact —
+   * only reveals whether the email is already known, nothing else.
+   */
+  @Get('check-email')
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
+  @ApiOperation({ summary: 'Check whether an email is already a known contact' })
+  checkEmail(@Query() query: CheckEmailQueryDto): ReturnType<PublicService['checkEmailExists']> {
+    return this.publicService.checkEmailExists(query.email);
   }
 
   /**
