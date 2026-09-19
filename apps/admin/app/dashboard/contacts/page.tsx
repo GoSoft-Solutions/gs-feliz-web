@@ -20,6 +20,7 @@ function campaignLabel(c: Contact): string {
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -43,6 +44,9 @@ export default function ContactsPage() {
     try {
       const res = await contactsApi.list(q);
       setContacts(res.items);
+      // The real total from the API, not res.items.length — the two only
+      // match while every contact fits on one page.
+      setTotal(res.total);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar contactos');
     } finally {
@@ -57,6 +61,7 @@ export default function ContactsPage() {
     try {
       await contactsApi.remove(c.id);
       setContacts((prev) => prev.filter((x) => x.id !== c.id));
+      setTotal((prev) => Math.max(0, prev - 1));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al eliminar el contacto');
     }
@@ -142,7 +147,7 @@ export default function ContactsPage() {
       <PageHeader
         icon={<IconContacts size={20} />}
         title="Contactos"
-        description={`${contacts.length} contacto(s) en total`}
+        description={`${total} contacto(s) en total`}
       />
 
       {toast && (

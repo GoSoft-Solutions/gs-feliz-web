@@ -112,9 +112,13 @@ export interface ContentItem {
 
 // ---- Contacts ----
 export const contactsApi = {
+  // 1000 (the API's current max) comfortably covers this platform's
+  // contact volume today — revisit with real pagination if that changes.
+  // Using the response's own `.total` (not `.items.length`) for a
+  // displayed count either way, so it's correct even past this cap.
   list: (search?: string) =>
     request<Paginated<Contact>>(
-      `/contacts?pageSize=100${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+      `/contacts?pageSize=1000${search ? `&search=${encodeURIComponent(search)}` : ''}`,
     ),
   update: (id: string, data: Partial<Pick<Contact, 'email' | 'firstName' | 'lastName' | 'phone' | 'status'>>) =>
     request<Contact>(`/contacts/${id}`, {
@@ -182,6 +186,9 @@ export const contentApi = {
     }),
   downloadLink: (id: string) => request<{ url: string }>(`/content/${id}/download`),
   stableLink: (id: string) => `${API_URL}/api/v1/content/${id}/access`,
+  // Opens the file in a new tab instead of downloading it — same object,
+  // just a different Content-Disposition on the server's response.
+  previewLink: (id: string) => `${API_URL}/api/v1/content/${id}/preview`,
 };
 
 // ---- Analytics ----

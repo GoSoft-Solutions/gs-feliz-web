@@ -84,6 +84,21 @@ export class StorageService {
     );
   }
 
+  /** Same object, but tells the browser to render it (PDF/image/etc. in a
+   * new tab) instead of downloading it — for the admin's "view" action. */
+  async createPreviewUrl(storageKey: string): Promise<string> {
+    this.assertEnabled();
+    return getSignedUrl(
+      this.s3!,
+      new GetObjectCommand({
+        Bucket: this.bucket!,
+        Key: storageKey,
+        ResponseContentDisposition: 'inline',
+      }),
+      { expiresIn: this.expiry },
+    );
+  }
+
   async deleteObject(storageKey: string): Promise<void> {
     if (!this.enabled) return;
     try {

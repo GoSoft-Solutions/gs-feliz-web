@@ -109,4 +109,21 @@ export class ContentService {
     }
     throw new NotFoundException('This content has no downloadable file');
   }
+
+  /**
+   * Same resolution as getDownloadLink, but for files we host ourselves
+   * it asks the browser to display the file (PDF/image/etc. in a new
+   * tab) instead of forcing a download — so the client can check content
+   * at a glance. An external downloadUrl is returned as-is either way:
+   * we don't control how someone else's server responds to it.
+   */
+  async getPreviewLink(id: string): Promise<{ url: string }> {
+    const item = await this.findOne(id);
+    if (item.downloadUrl) return { url: item.downloadUrl };
+    if (item.storageKey && this.storage.enabled) {
+      const url = await this.storage.createPreviewUrl(item.storageKey);
+      return { url };
+    }
+    throw new NotFoundException('This content has no downloadable file');
+  }
 }

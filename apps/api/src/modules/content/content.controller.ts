@@ -55,6 +55,14 @@ export class ContentController {
     return { url, statusCode: 302 };
   }
 
+  @Get(':id/preview')
+  @Redirect()
+  @ApiOperation({ summary: 'Redirect to a viewable (inline, non-download) content URL' })
+  async preview(@Param('id', ParseUUIDPipe) id: string): Promise<{ url: string; statusCode: 302 }> {
+    const { url } = await this.contentService.getPreviewLink(id);
+    return { url, statusCode: 302 };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a content item' })
   findOne(@Param('id', ParseUUIDPipe) id: string): Ret<'findOne'> {

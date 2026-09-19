@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { contentApi, uploadToS3, type ContentItem } from '../../../lib/api';
 import { PageHeader } from '../../../components/page-header';
-import { IconContent, IconEdit, IconLink, IconTrash } from '../../../components/icons';
+import { IconContent, IconEdit, IconEye, IconLink, IconTrash } from '../../../components/icons';
 
 interface FormState {
   title: string;
@@ -306,6 +306,16 @@ export default function ContentPage() {
                     {item.sizeBytes ? <p className="mt-1">{humanSize(item.sizeBytes)}</p> : null}
                   </div>
                   <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                    <a
+                      href={contentApi.previewLink(item.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Ver contenido (sin descargar)"
+                      aria-label="Ver contenido"
+                      className="rounded-lg p-2.5 text-gray-600 hover:bg-gray-100 transition"
+                    >
+                      <IconEye size={17} />
+                    </a>
                     <button
                       onClick={() => void handleCopyLink(item.id)}
                       title={copiedId === item.id ? 'Enlace copiado' : 'Copiar enlace de descarga'}
