@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { campaignsApi, contactsApi, type Campaign, type Contact } from '../../lib/api';
+import { analyticsApi, campaignsApi, contactsApi, type AnalyticsOverview, type Campaign, type Contact } from '../../lib/api';
 import { PageHeader } from '../../components/page-header';
 import { IconCampaigns, IconContacts, IconDashboard, IconMail, IconTrendingUp } from '../../components/icons';
 
@@ -16,6 +16,7 @@ function isThisWeek(iso: string): boolean {
 export default function DashboardPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -25,6 +26,17 @@ export default function DashboardPage() {
         const [c, camps] = await Promise.all([contactsApi.list(), campaignsApi.list()]);
         setContacts(c.items);
         setCampaigns(camps);
+        // Same endpoint Analíticas reads from (7-day window here, to match
+        // "esta semana") — the two pages can never show different numbers
+        // for the same thing since they're the same calculation. Falls
+        // back to computing from the lists above (an editor without the
+        // Analíticas permission gets a 403 here) rather than breaking the
+        // whole dashboard.
+        try {
+          setOverview(await analyticsApi.overview(7));
+        } catch {
+          // handled by the ?? fallbacks below
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error al cargar el dashboard');
       } finally {
@@ -34,10 +46,10 @@ export default function DashboardPage() {
   }, []);
 
   const stats = [
-    { label: 'Total Contactos', value: contacts.length, icon: IconContacts },
-    { label: 'Nuevos esta semana', value: contacts.filter((c) => isThisWeek(c.createdAt)).length, icon: IconTrendingUp },
-    { label: 'Campanas Activas', value: campaigns.filter((c) => c.status === 'ACTIVE').length, icon: IconCampaigns },
-    { label: 'Emails Enviados', value: 0, icon: IconMail },
+    { label: 'Total Contactos', value: overview?.totals.contacts ?? contacts.length, icon: IconContacts },
+    { label: 'Nuevos esta semana', value: overview?.totals.newInWindow ?? contacts.filter((c) => isThisWeek(c.createdAt)).length, icon: IconTrendingUp },
+    { label: 'Campanas Activas', value: overview?.totals.campaignsActive ?? campaigns.filter((c) => c.status === 'ACTIVE').length, icon: IconCampaigns },
+    { label: 'Emails Enviados', value: overview?.totals.emailsSent ?? 0, icon: IconMail },
   ];
 
   const recent = [...contacts]

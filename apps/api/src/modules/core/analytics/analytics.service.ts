@@ -1,6 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
 
+// The platform runs on a UTC server (no TZ set in the Docker image) but
+// the business — and everyone reading this chart — is in Mexico. Without
+// this, a contact created at, say, 8pm Mexico time lands after midnight
+// UTC and gets counted on the WRONG day (tomorrow, from the server's
+// point of view) — the growth chart would silently disagree with what
+// actually happened each day. Single-tenant platform for a Mexico-based
+// business, so a fixed IANA zone (DST-aware on its own) is the right call
+// rather than a per-user setting.
+const BUSINESS_TZ = 'America/Mexico_City';
+
+/** The calendar day (YYYY-MM-DD) a timestamp falls on in `BUSINESS_TZ`. */
+function businessDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: BUSINESS_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
 export interface AnalyticsOverview {
   totals: {
     contacts: number;
@@ -42,9 +62,23 @@ export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async overview(days = 30): Promise<AnalyticsOverview> {
-    const since = new Date();
-    since.setDate(since.getDate() - (days - 1));
-    since.setHours(0, 0, 0, 0);
+    // The exact set of business-calendar days the window covers, oldest
+    // first — e.g. ["2026-09-13", ..., "2026-09-19"] for days=7. Built
+    // from "today" in BUSINESS_TZ, not the server's UTC clock.
+    const todayKey = businessDateKey(new Date());
+    const [ty, tm, td] = todayKey.split('-').map(Number);
+    // A UTC-midnight anchor for `todayKey` — used only for whole-day
+    // arithmetic below (add/subtract N days), never reformatted back
+    // through a timezone, so it can't reintroduce the UTC-vs-Mexico
+    // day-shift this function exists to avoid.
+    const todayAnchor = new Date(Date.UTC(ty, tm - 1, td));
+    const windowDays: string[] = [];
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const d = new Date(todayAnchor);
+      d.setUTCDate(d.getUTCDate() - i);
+      windowDays.push(d.toISOString().slice(0, 10));
+    }
+    const windowDaySet = new Set(windowDays);
 
     const [contacts, campaigns, emailsSentTotal, recentEventRows] = await Promise.all([
       this.prisma.contact.findMany({
@@ -98,21 +132,17 @@ export class AnalyticsService {
 
       if (contact.unsubscribed) unsubscribed += 1;
 
-      if (contact.createdAt >= since) {
+      const dayKey = businessDateKey(contact.createdAt);
+      if (windowDaySet.has(dayKey)) {
         newInWindow += 1;
-        const dayKey = contact.createdAt.toISOString().slice(0, 10);
         growthCounts.set(dayKey, (growthCounts.get(dayKey) ?? 0) + 1);
       }
     }
 
-    // Zero-fill every day in the window so the chart has no gaps.
-    const growth: Array<{ date: string; count: number }> = [];
-    for (let i = 0; i < days; i += 1) {
-      const day = new Date(since);
-      day.setDate(day.getDate() + i);
-      const key = day.toISOString().slice(0, 10);
-      growth.push({ date: key, count: growthCounts.get(key) ?? 0 });
-    }
+    // Zero-fill every day in the window so the chart has no gaps. This is
+    // also exactly the same day list newInWindow was counted against, so
+    // the KPI tile and the sum of the chart's bars can never disagree.
+    const growth = windowDays.map((date) => ({ date, count: growthCounts.get(date) ?? 0 }));
 
     // --- Campaign performance (emails sent per campaign) ---------------
     const emailsByCampaign = await this.prisma.contactEvent.groupBy({
