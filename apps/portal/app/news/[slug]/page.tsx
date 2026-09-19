@@ -7,6 +7,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 type CampaignState = 'loading' | 'found' | 'not-found';
 type Step = 'email' | 'name';
 
+/** Turns an API error response into copy someone filling out a form can
+ * actually act on, instead of one generic "something went wrong". */
+function describeError(status: number): string {
+  if (status === 400) return 'Revisa que tu correo esté bien escrito.';
+  if (status === 404) return 'Este enlace ya no está disponible.';
+  if (status === 429) return 'Ya casi — espera un momento antes de intentar de nuevo.';
+  return 'Algo salió mal de nuestro lado. Intenta de nuevo en unos segundos.';
+}
+
 export default function CampaignNewsletterPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -20,6 +29,7 @@ export default function CampaignNewsletterPage() {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadySent, setAlreadySent] = useState(false);
   const [error, setError] = useState('');
 
   // The link only works while the campaign it points to actually exists
@@ -43,6 +53,7 @@ export default function CampaignNewsletterPage() {
   }, [slug]);
 
   const submit = async (nameValue?: string) => {
+    if (submitting) return; // guards a stray double-fire, on top of the disabled button below
     setSubmitting(true);
     setError('');
     try {
@@ -51,10 +62,15 @@ export default function CampaignNewsletterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, nombre: nameValue || undefined, campaignSlug: slug }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) {
+        setError(describeError(res.status));
+        return;
+      }
+      const data = (await res.json().catch(() => null)) as { alreadySent?: boolean } | null;
+      setAlreadySent(Boolean(data?.alreadySent));
       setSubmitted(true);
     } catch {
-      setError('No pudimos registrar tu correo. Intenta de nuevo.');
+      setError('No pudimos registrar tu correo. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -64,11 +80,15 @@ export default function CampaignNewsletterPage() {
   // gets asked for their name first (step 2) — never both fields up front.
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || checking) return;
     setChecking(true);
     setError('');
     try {
       const res = await fetch(`${API_URL}/api/v1/public/check-email?email=${encodeURIComponent(email)}`);
+      if (!res.ok) {
+        setError(describeError(res.status));
+        return;
+      }
       const data = (await res.json()) as { exists: boolean };
       if (data.exists) {
         await submit();
@@ -164,9 +184,11 @@ export default function CampaignNewsletterPage() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 style={styles.successTitle}>Listo, {nombre || 'estas dentro'}</h2>
+            <h2 style={styles.successTitle}>{alreadySent ? 'Ya lo tienes' : `Listo, ${nombre || 'estas dentro'}`}</h2>
             <p style={styles.successText}>
-              Revisa tu correo (y la carpeta de spam por si acaso). Tu contenido va en camino.
+              {alreadySent
+                ? 'Ya te habíamos enviado este contenido antes — busca en tu correo (o en spam).'
+                : 'Revisa tu correo (y la carpeta de spam por si acaso). Tu contenido va en camino.'}
             </p>
           </div>
         )}

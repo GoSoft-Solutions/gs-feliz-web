@@ -73,6 +73,7 @@ export default function ContentPage() {
   const [busyMsg, setBusyMsg] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState<ContentItem | null>(null);
+  const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
   const [activeCategory, setActiveCategory] = useState('ALL');
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -306,16 +307,14 @@ export default function ContentPage() {
                     {item.sizeBytes ? <p className="mt-1">{humanSize(item.sizeBytes)}</p> : null}
                   </div>
                   <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-                    <a
-                      href={contentApi.previewLink(item.id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setPreviewItem(item)}
                       title="Ver contenido (sin descargar)"
                       aria-label="Ver contenido"
                       className="rounded-lg p-2.5 text-gray-600 hover:bg-gray-100 transition"
                     >
                       <IconEye size={17} />
-                    </a>
+                    </button>
                     <button
                       onClick={() => void handleCopyLink(item.id)}
                       title={copiedId === item.id ? 'Enlace copiado' : 'Copiar enlace de descarga'}
@@ -355,6 +354,27 @@ export default function ContentPage() {
             {!file && <div><label className="block text-sm font-medium text-gray-700 mb-1">Link externo</label><input value={form.downloadUrl} onChange={(e) => setForm({ ...form, downloadUrl: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" /></div>}
             {busyMsg && <p className="text-sm text-gray-500">{busyMsg}</p>}
             <div className="flex gap-3 pt-4 border-t border-gray-100"><button onClick={() => void handleUpdate()} disabled={busy} className="px-4 py-2 bg-ink text-white text-sm rounded-lg disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar cambios'}</button><button onClick={() => setEditItem(null)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg">Cancelar</button></div>
+          </div>
+        </div>
+      )}
+
+      {/* Content preview modal — same bounded-height pattern as the
+          campaign "Ver correo" preview: header pinned, only the content
+          itself scrolls, so it never runs past the screen. */}
+      {previewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <h3 className="font-semibold text-gray-800 text-sm truncate pr-4">{previewItem.title}</h3>
+              <button onClick={() => setPreviewItem(null)} className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400">×</button>
+            </div>
+            <div className="flex-1 min-h-0 bg-gray-100">
+              <iframe
+                src={contentApi.previewLink(previewItem.id)}
+                title={previewItem.title}
+                className="w-full h-full min-h-[60vh] border-0"
+              />
+            </div>
           </div>
         </div>
       )}

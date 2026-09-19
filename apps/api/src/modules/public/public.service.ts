@@ -13,6 +13,10 @@ export interface SubscribeResult {
   success: true;
   status: 'created' | 'existing';
   emailQueued: boolean;
+  /** True when this campaign's welcome email had already been sent to
+   * this contact before, so it was NOT sent again — lets the capture
+   * page say "ya te lo enviamos" instead of implying a fresh send. */
+  alreadySent: boolean;
 }
 
 /**
@@ -168,57 +172,74 @@ export class PublicService {
       return { contact: existing, isNew };
     });
 
-    const emailQueued = await this.dispatchWelcomeEmail(campaign?.id ?? null, contact);
+    const { emailQueued, alreadySent } = await this.dispatchWelcomeEmail(campaign?.id ?? null, contact);
 
     this.logger.log('subscribe processed', {
       contactId: contact.id,
       status: isNew ? 'created' : 'existing',
       campaign: campaign?.slug,
       emailQueued,
+      alreadySent,
     });
 
     return {
       success: true,
       status: isNew ? 'created' : 'existing',
       emailQueued,
+      alreadySent,
     };
   }
 
   /**
-   * Sends (or queues) the welcome email for a subscriber. Returns true if
-   * the email was published to the queue for asynchronous delivery, false
-   * if it was handled inline (or skipped because the campaign has no email
-   * designed yet).
+   * Sends (or queues) the welcome email for a subscriber — unless this
+   * exact campaign already sent one to this contact before, in which
+   * case it's skipped (alreadySent: true) rather than resent. Covers the
+   * most common real-world "double processing" case: the same person
+   * re-submitting the same capture form (double click, revisiting the
+   * link days later, a retried request) — that must never re-trigger
+   * the welcome email each time, only the first time.
+   *
+   * Scoped to (contactId, campaignId) specifically — via the same
+   * `source: campaign.slug` this write already used — so it never
+   * blocks an unrelated, intentional send to the same contact (e.g. a
+   * manual bulk campaign email, which records `source: 'bulk'`).
    */
   private async dispatchWelcomeEmail(
     campaignId: string | null,
     contact: { id: string; email: string | null; firstName: string | null; unsubscribed?: boolean },
-  ): Promise<boolean> {
-    if (!contact.email) return false;
+  ): Promise<{ emailQueued: boolean; alreadySent: boolean }> {
+    if (!contact.email) return { emailQueued: false, alreadySent: false };
     // Never email a contact who opted out.
-    if (contact.unsubscribed) return false;
+    if (contact.unsubscribed) return { emailQueued: false, alreadySent: false };
+    if (!campaignId) return { emailQueued: false, alreadySent: false };
+
+    const campaign = await this.prisma.campaign.findUnique({ where: { id: campaignId } });
+    if (!campaign) return { emailQueued: false, alreadySent: false };
+
+    const alreadySent = await this.prisma.contactEvent.findFirst({
+      where: { contactId: contact.id, campaignId, eventType: 'EMAIL_SENT', source: campaign.slug },
+      select: { id: true },
+    });
+    if (alreadySent) return { emailQueued: false, alreadySent: true };
 
     // Prefer the queue: it decouples the HTTP request from delivery and
     // gives us retries. Falls back to inline send when no queue is set.
     if (this.queue.enabled) {
-      return this.queue.publish({
+      const queued = await this.queue.publish({
         type: 'SUBSCRIBE_EMAIL',
         campaignId,
         contactId: contact.id,
         email: contact.email,
         firstName: contact.firstName,
       });
+      return { emailQueued: queued, alreadySent: false };
     }
-
-    if (!campaignId) return false;
-    const campaign = await this.prisma.campaign.findUnique({ where: { id: campaignId } });
-    if (!campaign) return false;
 
     const outbound = renderCampaignEmail(campaign, {
       email: contact.email,
       firstName: contact.firstName,
     });
-    if (!outbound) return false;
+    if (!outbound) return { emailQueued: false, alreadySent: false };
 
     await this.email.send(outbound);
     await this.prisma.contactEvent.create({
@@ -230,6 +251,6 @@ export class PublicService {
         metadata: { subject: outbound.subject },
       },
     });
-    return false;
+    return { emailQueued: false, alreadySent: false };
   }
 }

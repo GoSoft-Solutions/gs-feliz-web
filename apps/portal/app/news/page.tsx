@@ -7,6 +7,14 @@ const PILARES = ['Mindset', 'Finanzas', 'Relaciones', 'Identidad'];
 
 type Step = 'email' | 'name';
 
+/** Turns an API error response into copy someone filling out a form can
+ * actually act on, instead of one generic "something went wrong". */
+function describeError(status: number): string {
+  if (status === 400) return 'Revisa que tu correo esté bien escrito.';
+  if (status === 429) return 'Ya casi — espera un momento antes de intentar de nuevo.';
+  return 'Algo salió mal de nuestro lado. Intenta de nuevo en unos segundos.';
+}
+
 export default function NewsletterPage() {
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
@@ -17,6 +25,7 @@ export default function NewsletterPage() {
   const [error, setError] = useState('');
 
   const submit = async (nameValue?: string) => {
+    if (submitting) return; // guards a stray double-fire, on top of the disabled button below
     setSubmitting(true);
     setError('');
     try {
@@ -25,10 +34,13 @@ export default function NewsletterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, nombre: nameValue || undefined }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) {
+        setError(describeError(res.status));
+        return;
+      }
       setSubmitted(true);
     } catch {
-      setError('No pudimos registrar tu correo. Intenta de nuevo.');
+      setError('No pudimos registrar tu correo. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -38,11 +50,15 @@ export default function NewsletterPage() {
   // gets asked for their name first (step 2) — never both fields up front.
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || checking) return;
     setChecking(true);
     setError('');
     try {
       const res = await fetch(`${API_URL}/api/v1/public/check-email?email=${encodeURIComponent(email)}`);
+      if (!res.ok) {
+        setError(describeError(res.status));
+        return;
+      }
       const data = (await res.json()) as { exists: boolean };
       if (data.exists) {
         await submit();

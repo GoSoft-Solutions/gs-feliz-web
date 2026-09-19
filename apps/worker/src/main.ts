@@ -49,6 +49,22 @@ async function handleSubscribeEmail(
     return;
   }
 
+  // Mirrors the same check in PublicService.dispatchWelcomeEmail — a
+  // retried/duplicate SQS delivery (or a second subscribe request queued
+  // before the first was processed) must not resend this campaign's
+  // welcome email to the same contact twice.
+  const alreadySent = await prisma.contactEvent.findFirst({
+    where: { contactId: msg.contactId, campaignId: campaign.id, eventType: 'EMAIL_SENT', source: campaign.slug },
+    select: { id: true },
+  });
+  if (alreadySent) {
+    console.log('[worker] welcome email already sent for this campaign, skipping', {
+      contactId: msg.contactId,
+      campaignId: campaign.id,
+    });
+    return;
+  }
+
   const email = renderCampaignEmail(campaign, { email: msg.email, firstName: msg.firstName });
   if (!email) {
     console.log('[worker] campaign has no email designed yet, skipping', {
