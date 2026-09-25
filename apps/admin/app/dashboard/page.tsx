@@ -8,13 +8,23 @@ function fullName(c: Contact): string {
   return [c.firstName, c.lastName].filter(Boolean).join(' ') || '(sin nombre)';
 }
 
+// Fallback only (when the analytics call is unavailable): the current
+// week starts on Monday, in the browser's local time.
 function isThisWeek(iso: string): boolean {
-  const d = new Date(iso).getTime();
-  return Date.now() - d < 7 * 24 * 60 * 60 * 1000;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return new Date(iso).getTime() >= start.getTime();
+}
+
+/** "22 sep" from a YYYY-MM-DD key, without a timezone shift. */
+function shortDate(key: string): string {
+  return new Date(`${key}T00:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
 export default function DashboardPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactsTotal, setContactsTotal] = useState(0);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +35,7 @@ export default function DashboardPage() {
       try {
         const [c, camps] = await Promise.all([contactsApi.list(), campaignsApi.list()]);
         setContacts(c.items);
+        setContactsTotal(c.total);
         setCampaigns(camps);
         // Same endpoint Analíticas reads from (7-day window here, to match
         // "esta semana") — the two pages can never show different numbers
@@ -45,9 +56,15 @@ export default function DashboardPage() {
     })();
   }, []);
 
-  const stats = [
-    { label: 'Total Contactos', value: overview?.totals.contacts ?? contacts.length, icon: IconContacts },
-    { label: 'Nuevos esta semana', value: overview?.totals.newInWindow ?? contacts.filter((c) => isThisWeek(c.createdAt)).length, icon: IconTrendingUp },
+  const stats: Array<{ label: string; value: number; icon: typeof IconContacts; hint?: string }> = [
+    { label: 'Total Contactos', value: overview?.totals.contacts ?? contactsTotal, icon: IconContacts },
+    {
+      label: 'Nuevos esta semana',
+      value: overview?.totals.newThisWeek ?? contacts.filter((c) => isThisWeek(c.createdAt)).length,
+      icon: IconTrendingUp,
+      // Weeks start on Monday and reset on their own every Monday.
+      hint: overview ? `Desde el lunes ${shortDate(overview.totals.weekStart)}` : undefined,
+    },
     { label: 'Campanas Activas', value: overview?.totals.campaignsActive ?? campaigns.filter((c) => c.status === 'ACTIVE').length, icon: IconCampaigns },
     { label: 'Emails Enviados', value: overview?.totals.emailsSent ?? 0, icon: IconMail },
   ];
@@ -73,6 +90,7 @@ export default function DashboardPage() {
               <p className="text-sm">{stat.label}</p>
             </div>
             <p className="font-display text-4xl tracking-wide text-ink mt-2">{loading ? '—' : stat.value}</p>
+            {stat.hint && !loading && <p className="text-xs text-gray-400 mt-1">{stat.hint}</p>}
           </div>
         ))}
       </div>

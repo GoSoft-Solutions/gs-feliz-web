@@ -1,6 +1,6 @@
 'use client';
-import { Fragment, useEffect, useState } from 'react';
-import { contactsApi, type Contact } from '../../../lib/api';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { contactsApi, CONTACTS_PAGE_SIZE, type Contact } from '../../../lib/api';
 import { PageHeader } from '../../../components/page-header';
 import { IconChevron, IconContacts, IconEdit, IconHistory, IconMail, IconSearch, IconTrash } from '../../../components/icons';
 import { EmailPreview, RichEditor } from '../../../components/email-editor';
@@ -18,12 +18,35 @@ function campaignLabel(c: Contact): string {
   return c.sources?.[0]?.campaign?.name || '-';
 }
 
+/** Page numbers to show, with "…" for skipped ranges: always the first,
+ * last and current page (plus its neighbours), so it stays compact no
+ * matter how many pages there are. */
+function pageWindow(current: number, total: number): Array<number | '…'> {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  if (current <= 3) [2, 3, 4].forEach((p) => pages.add(p));
+  if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((p) => pages.add(p));
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const out: Array<number | '…'> = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) out.push('…');
+    out.push(p);
+  });
+  return out;
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  // The search that's actually applied — separate from what's typed in
+  // the box, so paging keeps using the last *submitted* search.
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const tableTopRef = useRef<HTMLDivElement>(null);
   const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
 
   // Contact editor modal state
@@ -38,20 +61,34 @@ export default function ContactsPage() {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState('');
 
-  const load = async (q?: string) => {
+  const load = async (q: string = appliedSearch, p: number = page) => {
     setLoading(true);
     setError('');
     try {
-      const res = await contactsApi.list(q);
+      const res = await contactsApi.list(q || undefined, p);
+      // Deleted the only row on the last page → land on the previous one
+      // instead of an empty page.
+      if (res.items.length === 0 && p > 1) {
+        await load(q, p - 1);
+        return;
+      }
       setContacts(res.items);
-      // The real total from the API, not res.items.length — the two only
-      // match while every contact fits on one page.
+      // Real counts from the API, not res.items.length (one page only).
       setTotal(res.total);
+      setTotalPages(res.totalPages);
+      setPage(p);
+      setAppliedSearch(q);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar contactos');
     } finally {
       setLoading(false);
     }
+  };
+
+  const goToPage = async (p: number) => {
+    if (p < 1 || p > totalPages || p === page) return;
+    await load(appliedSearch, p);
+    tableTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const remove = async (c: Contact) => {
@@ -60,8 +97,7 @@ export default function ContactsPage() {
     setError('');
     try {
       await contactsApi.remove(c.id);
-      setContacts((prev) => prev.filter((x) => x.id !== c.id));
-      setTotal((prev) => Math.max(0, prev - 1));
+      await load(); // re-fetch this page so it stays full and totals stay right
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al eliminar el contacto');
     }
@@ -147,7 +183,7 @@ export default function ContactsPage() {
       <PageHeader
         icon={<IconContacts size={20} />}
         title="Contactos"
-        description={`${total} contacto(s) en total`}
+        description={appliedSearch ? `${total} resultado(s) para "${appliedSearch}"` : `${total} contacto(s) en total`}
       />
 
       {toast && (
@@ -162,7 +198,7 @@ export default function ContactsPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') void load(search); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') void load(search.trim(), 1); }}
           placeholder="Buscar por nombre o email... (Enter)"
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange focus:border-transparent outline-none"
         />
@@ -170,7 +206,7 @@ export default function ContactsPage() {
 
       {error && !emailTarget && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div ref={tableTopRef} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden scroll-mt-6">
         {/* Scrolls horizontally on its own (discreet native scrollbar)
             instead of letting the table squish or spill past the card —
             min-w keeps every column readable, no matter the screen. */}
@@ -277,6 +313,55 @@ export default function ContactsPage() {
           </tbody>
         </table>
         </div>
+
+        {total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3">
+            <p className="text-xs text-gray-500">
+              Mostrando {(page - 1) * CONTACTS_PAGE_SIZE + 1}–{(page - 1) * CONTACTS_PAGE_SIZE + contacts.length} de {total}
+            </p>
+            {totalPages > 1 && (
+              <nav className="flex items-center gap-1" aria-label="Paginación de contactos">
+                <button
+                  type="button"
+                  onClick={() => void goToPage(page - 1)}
+                  disabled={page === 1 || loading}
+                  aria-label="Página anterior"
+                  className="flex h-8 items-center gap-1 rounded-lg px-2 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                >
+                  <IconChevron size={14} className="rotate-90" /> Anterior
+                </button>
+                {pageWindow(page, totalPages).map((p, i) =>
+                  p === '…' ? (
+                    <span key={`gap-${i}`} className="px-1 text-sm text-gray-400">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => void goToPage(p)}
+                      disabled={loading}
+                      aria-label={`Página ${p}`}
+                      aria-current={p === page ? 'page' : undefined}
+                      className={`h-8 min-w-8 rounded-lg px-2 text-sm tabular-nums transition-colors ${
+                        p === page ? 'bg-ink font-medium text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+                <button
+                  type="button"
+                  onClick={() => void goToPage(page + 1)}
+                  disabled={page === totalPages || loading}
+                  aria-label="Página siguiente"
+                  className="flex h-8 items-center gap-1 rounded-lg px-2 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                >
+                  Siguiente <IconChevron size={14} className="-rotate-90" />
+                </button>
+              </nav>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Email composer modal — same rich editor as Campañas/Newsletter, so

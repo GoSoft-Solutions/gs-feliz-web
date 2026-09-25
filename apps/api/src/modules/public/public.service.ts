@@ -17,6 +17,9 @@ export interface SubscribeResult {
    * this contact before, so it was NOT sent again — lets the capture
    * page say "ya te lo enviamos" instead of implying a fresh send. */
   alreadySent: boolean;
+  /** The contact's first name (just entered, or already on file for a
+   * returning contact) so the capture page can say "¡Listo, Israel!". */
+  firstName: string | null;
 }
 
 /**
@@ -110,6 +113,8 @@ export class PublicService {
       }
     }
 
+    const nombre = dto.nombre?.trim() || undefined;
+
     const { contact, isNew } = await this.prisma.$transaction(async (tx) => {
       let existing = await tx.contact.findUnique({ where: { email } });
       const isNew = !existing;
@@ -118,15 +123,15 @@ export class PublicService {
         existing = await tx.contact.create({
           data: {
             email,
-            firstName: dto.nombre,
+            firstName: nombre,
             metadata: {},
           },
         });
-      } else if (dto.nombre && !existing.firstName) {
+      } else if (nombre && !existing.firstName) {
         // Backfill a name for a returning contact without overwriting one.
         existing = await tx.contact.update({
           where: { id: existing.id },
-          data: { firstName: dto.nombre },
+          data: { firstName: nombre },
         });
       }
 
@@ -187,6 +192,7 @@ export class PublicService {
       status: isNew ? 'created' : 'existing',
       emailQueued,
       alreadySent,
+      firstName: contact.firstName,
     };
   }
 

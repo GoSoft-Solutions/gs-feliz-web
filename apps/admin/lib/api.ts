@@ -111,14 +111,15 @@ export interface ContentItem {
 }
 
 // ---- Contacts ----
+export const CONTACTS_PAGE_SIZE = 50;
+
 export const contactsApi = {
-  // 1000 (the API's current max) comfortably covers this platform's
-  // contact volume today — revisit with real pagination if that changes.
-  // Using the response's own `.total` (not `.items.length`) for a
-  // displayed count either way, so it's correct even past this cap.
-  list: (search?: string) =>
+  // Server-side pagination, 50 per page. Always read the response's own
+  // `.total` / `.totalPages` for counts — never `.items.length`, which is
+  // only ever one page.
+  list: (search?: string, page = 1, pageSize = CONTACTS_PAGE_SIZE) =>
     request<Paginated<Contact>>(
-      `/contacts?pageSize=1000${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+      `/contacts?page=${page}&pageSize=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
     ),
   update: (id: string, data: Partial<Pick<Contact, 'email' | 'firstName' | 'lastName' | 'phone' | 'status'>>) =>
     request<Contact>(`/contacts/${id}`, {
@@ -196,6 +197,9 @@ export interface AnalyticsOverview {
   totals: {
     contacts: number;
     newInWindow: number;
+    newThisWeek: number;
+    weekStart: string;
+    activeMinCampaigns: number;
     campaigns: number;
     campaignsActive: number;
     emailsSent: number;

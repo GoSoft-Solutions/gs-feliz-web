@@ -160,7 +160,13 @@ export default function AnalyticsPage() {
                 <p className="text-sm">Total contactos</p>
               </div>
               <p className="font-display text-4xl tracking-wide text-ink mt-2">{data.totals.contacts}</p>
-              <p className="text-xs text-gray-400 mt-1">{data.totals.unsubscribeRate}% se ha dado de baja</p>
+              {/* Real unsubscribes — contacts who hit "Cancelar suscripción"
+                  in an email. */}
+              <p className="text-xs text-gray-400 mt-1">
+                {data.totals.unsubscribed === 0
+                  ? 'Nadie ha cancelado su suscripción'
+                  : `${data.totals.unsubscribed} ${data.totals.unsubscribed === 1 ? 'canceló' : 'cancelaron'} su suscripción (${data.totals.unsubscribeRate}%)`}
+              </p>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2.5 text-gray-500">
@@ -226,7 +232,14 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Status breakdown — single stacked bar, part-to-whole */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Contactos por estado</h3>
+              <div className="flex items-baseline justify-between gap-3 mb-4">
+                <h3 className="text-sm font-semibold text-gray-700">Contactos por estado</h3>
+                {/* Headline: share of contacts that are actually engaged. */}
+                <p className="text-sm text-gray-500">
+                  <span className="font-display text-2xl tracking-wide text-ink">{statusSegments.find((s) => s.status === 'ACTIVE')?.pct ?? 0}%</span>{' '}
+                  activos
+                </p>
+              </div>
               <div className="h-3 rounded-full overflow-hidden flex bg-gray-100">
                 {statusSegments.map((s) =>
                   s.count > 0 ? (
@@ -248,6 +261,12 @@ export default function AnalyticsPage() {
                   </div>
                 ))}
               </div>
+              {/* The rules behind the numbers, so nobody has to guess. */}
+              <p className="mt-5 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-400">
+                <strong className="font-medium text-gray-500">Activo:</strong> ha estado en {data.totals.activeMinCampaigns} o más campañas ·{' '}
+                <strong className="font-medium text-gray-500">Inactivo:</strong> canceló su suscripción ·{' '}
+                <strong className="font-medium text-gray-500">Lead:</strong> el resto.
+              </p>
             </div>
 
             {/* Source breakdown — ranked bar list, magnitude */}

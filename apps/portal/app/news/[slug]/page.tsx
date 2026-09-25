@@ -30,6 +30,9 @@ export default function CampaignNewsletterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [alreadySent, setAlreadySent] = useState(false);
+  // Who the confirmation greets: the name they just typed, or the one we
+  // already have on file for a returning contact.
+  const [greetName, setGreetName] = useState('');
   const [error, setError] = useState('');
 
   // The link only works while the campaign it points to actually exists
@@ -60,14 +63,15 @@ export default function CampaignNewsletterPage() {
       const res = await fetch(`${API_URL}/api/v1/public/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, nombre: nameValue || undefined, campaignSlug: slug }),
+        body: JSON.stringify({ email, nombre: nameValue?.trim() || undefined, campaignSlug: slug }),
       });
       if (!res.ok) {
         setError(describeError(res.status));
         return;
       }
-      const data = (await res.json().catch(() => null)) as { alreadySent?: boolean } | null;
+      const data = (await res.json().catch(() => null)) as { alreadySent?: boolean; firstName?: string | null } | null;
       setAlreadySent(Boolean(data?.alreadySent));
+      setGreetName(data?.firstName?.trim() || nameValue?.trim() || '');
       setSubmitted(true);
     } catch {
       setError('No pudimos registrar tu correo. Revisa tu conexión e intenta de nuevo.');
@@ -184,7 +188,7 @@ export default function CampaignNewsletterPage() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 style={styles.successTitle}>{alreadySent ? 'Ya lo tienes' : `Listo, ${nombre || 'estas dentro'}`}</h2>
+            <h2 style={styles.successTitle}>{greetName ? `¡Listo, ${greetName}!` : '¡Listo!'}</h2>
             <p style={styles.successText}>
               {alreadySent
                 ? 'Ya te habíamos enviado este contenido antes — busca en tu correo (o en spam).'

@@ -22,6 +22,9 @@ export default function NewsletterPage() {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // Who the confirmation greets: the name they just typed, or the one we
+  // already have on file for a returning contact.
+  const [greetName, setGreetName] = useState('');
   const [error, setError] = useState('');
 
   const submit = async (nameValue?: string) => {
@@ -32,12 +35,14 @@ export default function NewsletterPage() {
       const res = await fetch(`${API_URL}/api/v1/public/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, nombre: nameValue || undefined }),
+        body: JSON.stringify({ email, nombre: nameValue?.trim() || undefined }),
       });
       if (!res.ok) {
         setError(describeError(res.status));
         return;
       }
+      const data = (await res.json().catch(() => null)) as { firstName?: string | null } | null;
+      setGreetName(data?.firstName?.trim() || nameValue?.trim() || '');
       setSubmitted(true);
     } catch {
       setError('No pudimos registrar tu correo. Revisa tu conexión e intenta de nuevo.');
@@ -140,7 +145,7 @@ export default function NewsletterPage() {
             {error && <p style={styles.error}>{error}</p>}
           </>
         ) : (
-          <SuccessState name={nombre} />
+          <SuccessState name={greetName} />
         )}
       </section>
     </main>
@@ -155,7 +160,7 @@ function SuccessState({ name }: { name?: string }) {
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </div>
-      <h2 style={styles.successTitle}>{name ? `Listo, ${name}` : 'Listo, estas dentro'}</h2>
+      <h2 style={styles.successTitle}>{name ? `¡Listo, ${name}!` : '¡Listo!'}</h2>
       <p style={styles.successText}>
         Revisa tu correo (y la carpeta de spam por si acaso). Tu primer contenido va en camino.
       </p>

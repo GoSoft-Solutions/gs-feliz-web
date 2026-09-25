@@ -63,7 +63,9 @@ export class ContactsService {
     const [items, total] = await Promise.all([
       this.prisma.contact.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        // id as a tiebreaker: contacts created in bulk share a createdAt,
+        // and without a total order pages can repeat or skip rows.
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * pageSize,
         take: pageSize,
         // Include the signup source(s) and the related campaign so the admin
