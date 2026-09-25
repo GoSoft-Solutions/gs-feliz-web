@@ -40,7 +40,7 @@ export interface AnalyticsOverview {
   statusBreakdown: Array<{ status: string; count: number }>;
   sourceBreakdown: Array<{ source: string; count: number }>;
   growth: Array<{ date: string; count: number }>;
-  campaignPerformance: Array<{ id: string; name: string; slug: string; contacts: number; emailsSent: number }>;
+  campaignPerformance: Array<{ id: string; name: string; slug: string; createdAt: Date; contacts: number; emailsSent: number }>;
   recentEvents: Array<{
     id: string;
     eventType: string;
@@ -120,6 +120,7 @@ export class AnalyticsService {
           name: true,
           slug: true,
           status: true,
+          createdAt: true,
           _count: { select: { sources: true } },
         },
       }),
@@ -182,6 +183,7 @@ export class AnalyticsService {
         id: campaign.id,
         name: campaign.name,
         slug: campaign.slug,
+        createdAt: campaign.createdAt,
         contacts: campaign._count.sources,
         emailsSent: emailsByCampaignMap.get(campaign.id) ?? 0,
       }))

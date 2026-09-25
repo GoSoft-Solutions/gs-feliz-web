@@ -57,7 +57,12 @@ function GrowthTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
-function BarList({ items, color, emptyLabel }: { items: Array<{ label: string; value: number }>; color: string; emptyLabel: string }) {
+/** "12 sep 2026", in Mexico time so it matches the rest of the platform. */
+function formatCreated(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Mexico_City' });
+}
+
+function BarList({ items, color, emptyLabel }: { items: Array<{ label: string; value: number; note?: string }>; color: string; emptyLabel: string }) {
   if (items.length === 0) {
     return <p className="text-sm text-gray-400 py-6 text-center">{emptyLabel}</p>;
   }
@@ -67,7 +72,10 @@ function BarList({ items, color, emptyLabel }: { items: Array<{ label: string; v
       {items.map((item) => (
         <div key={item.label}>
           <div className="flex items-baseline justify-between gap-3 mb-1.5">
-            <span className="text-sm text-gray-700 truncate">{item.label}</span>
+            <span className="text-sm text-gray-700 truncate">
+              {item.label}
+              {item.note && <span className="ml-2 text-xs text-gray-400">{item.note}</span>}
+            </span>
             <span className="text-sm font-semibold text-ink shrink-0 tabular-nums">{item.value}</span>
           </div>
           <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -285,7 +293,7 @@ export default function AnalyticsPage() {
               <h3 className="text-sm font-semibold text-gray-700 mb-1">Campañas con más alcance</h3>
               <p className="text-xs text-gray-400 mb-4">Contactos asociados a cada campaña.</p>
               <BarList
-                items={data.campaignPerformance.map((c) => ({ label: c.name, value: c.contacts }))}
+                items={data.campaignPerformance.map((c) => ({ label: c.name, value: c.contacts, note: `Creada el ${formatCreated(c.createdAt)}` }))}
                 color="#0A0A0A"
                 emptyLabel="Crea tu primera campaña para verla aquí."
               />

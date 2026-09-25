@@ -211,7 +211,7 @@ export interface AnalyticsOverview {
   statusBreakdown: Array<{ status: string; count: number }>;
   sourceBreakdown: Array<{ source: string; count: number }>;
   growth: Array<{ date: string; count: number }>;
-  campaignPerformance: Array<{ id: string; name: string; slug: string; contacts: number; emailsSent: number }>;
+  campaignPerformance: Array<{ id: string; name: string; slug: string; createdAt: string; contacts: number; emailsSent: number }>;
   recentEvents: Array<{
     id: string;
     eventType: string;
