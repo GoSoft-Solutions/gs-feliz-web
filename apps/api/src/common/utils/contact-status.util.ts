@@ -16,10 +16,12 @@ export function activeThreshold(totalCampaigns: number): number {
  * The status shown in the Contacts table and Analytics, derived from what
  * contacts actually did — the stored `status` column stays LEAD unless
  * someone edits it by hand, so it can't tell you who's engaged:
- *  - Inactivo: cancelled their subscription (or was marked INACTIVE)
- *  - Cliente:  marked CUSTOMER (a purchase can't be inferred from here)
- *  - Activo:   in enough distinct campaigns (or marked ACTIVE by hand)
+ *  - Inactivo: cancelled their subscription (or was marked INACTIVE by hand)
+ *  - Cliente:  marked CUSTOMER by hand (a purchase can't be inferred from here)
+ *  - Activo:   in enough distinct campaigns
  *  - Lead:     everyone else
+ * Activo/Lead are automatic on purpose: a stored ACTIVE/LEAD is ignored, so
+ * a contact moves between them on its own as campaigns are added.
  */
 export function deriveContactStatus(
   contact: { status: string; unsubscribed: boolean },
@@ -28,7 +30,7 @@ export function deriveContactStatus(
 ): string {
   if (contact.unsubscribed || contact.status === 'INACTIVE') return 'INACTIVE';
   if (contact.status === 'CUSTOMER') return 'CUSTOMER';
-  if (contact.status === 'ACTIVE' || campaignCount >= threshold) return 'ACTIVE';
+  if (campaignCount >= threshold) return 'ACTIVE';
   return 'LEAD';
 }
 

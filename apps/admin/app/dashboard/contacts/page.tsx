@@ -52,6 +52,7 @@ export default function ContactsPage() {
   // Contact editor modal state
   const [editTarget, setEditTarget] = useState<Contact | null>(null);
   const [editForm, setEditForm] = useState({ email: '', firstName: '', lastName: '', phone: '', status: 'LEAD' });
+  const [statusFilter, setStatusFilter] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Email composer modal state
@@ -61,15 +62,15 @@ export default function ContactsPage() {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState('');
 
-  const load = async (q: string = appliedSearch, p: number = page) => {
+  const load = async (q: string = appliedSearch, p: number = page, s: string = statusFilter) => {
     setLoading(true);
     setError('');
     try {
-      const res = await contactsApi.list(q || undefined, p);
+      const res = await contactsApi.list(q || undefined, p, undefined, s || undefined);
       // Deleted the only row on the last page → land on the previous one
       // instead of an empty page.
       if (res.items.length === 0 && p > 1) {
-        await load(q, p - 1);
+        await load(q, p - 1, s);
         return;
       }
       setContacts(res.items);
@@ -78,12 +79,21 @@ export default function ContactsPage() {
       setTotalPages(res.totalPages);
       setPage(p);
       setAppliedSearch(q);
+      setStatusFilter(s);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar contactos');
     } finally {
       setLoading(false);
     }
   };
+
+  const STATUS_FILTERS = [
+    { value: '', label: 'Todos' },
+    { value: 'LEAD', label: 'Lead' },
+    { value: 'ACTIVE', label: 'Activo' },
+    { value: 'CUSTOMER', label: 'Cliente' },
+    { value: 'INACTIVE', label: 'Inactivo' },
+  ];
 
   const goToPage = async (p: number) => {
     if (p < 1 || p > totalPages || p === page) return;
@@ -117,7 +127,8 @@ export default function ContactsPage() {
       firstName: c.firstName ?? '',
       lastName: c.lastName ?? '',
       phone: c.phone ?? '',
-      status: c.status,
+      // Lead/Activo are automatic; only Cliente/Inactivo are set by hand.
+      status: c.status === 'CUSTOMER' || c.status === 'INACTIVE' ? c.status : 'LEAD',
     });
     setError('');
   };
@@ -183,7 +194,7 @@ export default function ContactsPage() {
       <PageHeader
         icon={<IconContacts size={20} />}
         title="Contactos"
-        description={appliedSearch ? `${total} resultado(s) para "${appliedSearch}"` : `${total} contacto(s) en total`}
+        description={appliedSearch ? `${total} resultado(s) para "${appliedSearch}"` : statusFilter ? `${total} contacto(s) con este estado` : `${total} contacto(s) en total`}
       />
 
       {toast && (
@@ -202,6 +213,20 @@ export default function ContactsPage() {
           placeholder="Buscar por nombre o email... (Enter)"
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange focus:border-transparent outline-none"
         />
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => void load(appliedSearch, 1, f.value)}
+            className={`px-3.5 py-1.5 rounded-full text-sm border transition-colors ${
+              statusFilter === f.value ? 'bg-ink text-white border-ink' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {error && !emailTarget && <p className="text-red-500 text-sm mb-4">{error}</p>}
@@ -449,13 +474,13 @@ export default function ContactsPage() {
                   <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Status</label>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Estado</label>
                   <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-orange text-sm">
-                    <option value="LEAD">LEAD</option>
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="CUSTOMER">CUSTOMER</option>
-                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="LEAD">Automático (Lead / Activo)</option>
+                    <option value="CUSTOMER">Cliente</option>
+                    <option value="INACTIVE">Inactivo</option>
                   </select>
+                  <p className="mt-1 text-xs text-gray-400">Pasa a Activo solo, según las campañas en las que participa.</p>
                 </div>
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}

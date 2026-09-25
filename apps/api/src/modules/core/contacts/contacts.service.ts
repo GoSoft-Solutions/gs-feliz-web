@@ -49,7 +49,6 @@ export class ContactsService {
     const pageSize = query.pageSize ?? 20;
 
     const where: Prisma.ContactWhereInput = {
-      ...(query.status ? { status: query.status } : {}),
       ...(query.search
         ? {
             OR: [
@@ -61,14 +60,37 @@ export class ContactsService {
         : {}),
     };
 
-    const [items, total, liveCampaigns] = await Promise.all([
-      this.prisma.contact.findMany({
+    const liveCampaigns = await this.prisma.campaign.count({ where: { status: { not: 'DRAFT' } } });
+    // Same rule Analytics uses, so the table and the charts never disagree.
+    const threshold = activeThreshold(liveCampaigns);
+    const order: Prisma.ContactOrderByWithRelationInput[] = [{ createdAt: 'desc' }, { id: 'desc' }];
+
+    // The status is derived from activity, not stored, so a status filter
+    // can't be a WHERE clause: resolve the matching ids first, then page them.
+    let idFilter: Prisma.ContactWhereInput = {};
+    let filteredTotal: number | null = null;
+    let pageIds: string[] | null = null;
+    if (query.status) {
+      const light = await this.prisma.contact.findMany({
         where,
+        orderBy: order,
+        select: { id: true, status: true, unsubscribed: true, sources: { select: { campaignId: true } } },
+      });
+      const matching = light
+        .filter((c) => deriveContactStatus(c, distinctCampaigns(c.sources), threshold) === query.status)
+        .map((c) => c.id);
+      filteredTotal = matching.length;
+      pageIds = matching.slice((page - 1) * pageSize, page * pageSize);
+      idFilter = { id: { in: pageIds } };
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.contact.findMany({
+        where: { AND: [where, idFilter] },
         // id as a tiebreaker: contacts created in bulk share a createdAt,
         // and without a total order pages can repeat or skip rows.
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        orderBy: order,
+        ...(pageIds ? {} : { skip: (page - 1) * pageSize, take: pageSize }),
         // Include the signup source(s) and the related campaign so the admin
         // list can show FUENTE (e.g. "Instagram") and the campaign name.
         include: {
@@ -78,12 +100,8 @@ export class ContactsService {
           },
         },
       }),
-      this.prisma.contact.count({ where }),
-      this.prisma.campaign.count({ where: { status: { not: 'DRAFT' } } }),
+      filteredTotal !== null ? Promise.resolve(filteredTotal) : this.prisma.contact.count({ where }),
     ]);
-
-    // Same rule Analytics uses, so the table and the charts never disagree.
-    const threshold = activeThreshold(liveCampaigns);
 
     return {
       items: items.map((c) => ({

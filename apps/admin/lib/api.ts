@@ -119,9 +119,9 @@ export const contactsApi = {
   // Server-side pagination, 50 per page. Always read the response's own
   // `.total` / `.totalPages` for counts — never `.items.length`, which is
   // only ever one page.
-  list: (search?: string, page = 1, pageSize = CONTACTS_PAGE_SIZE) =>
+  list: (search?: string, page = 1, pageSize = CONTACTS_PAGE_SIZE, status?: string) =>
     request<Paginated<Contact>>(
-      `/contacts?page=${page}&pageSize=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+      `/contacts?page=${page}&pageSize=${pageSize}${search ? `&search=${encodeURIComponent(search)}` : ''}${status ? `&status=${status}` : ''}`,
     ),
   update: (id: string, data: Partial<Pick<Contact, 'email' | 'firstName' | 'lastName' | 'phone' | 'status'>>) =>
     request<Contact>(`/contacts/${id}`, {
