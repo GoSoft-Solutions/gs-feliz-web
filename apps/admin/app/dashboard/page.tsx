@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { analyticsApi, campaignsApi, contactsApi, type AnalyticsOverview, type Campaign, type Contact } from '../../lib/api';
+import { contactStatusLabel, analyticsApi, campaignsApi, contactsApi, type AnalyticsOverview, type Campaign, type Contact } from '../../lib/api';
 import { PageHeader } from '../../components/page-header';
 import { IconCampaigns, IconContacts, IconDashboard, IconMail, IconTrendingUp } from '../../components/icons';
 
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
                   <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-orange/10 text-orange rounded capitalize">{c.sources?.[0]?.source ?? '-'}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600">{campaignName(c.sources?.[0]?.campaignId)}</td>
-                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{c.status}</span></td>
+                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{contactStatusLabel(c)}</span></td>
                 </tr>
               ))
             )}

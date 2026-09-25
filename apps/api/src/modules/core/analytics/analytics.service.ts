@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
+import { activeThreshold, deriveContactStatus, distinctCampaigns } from '../../../common/utils/contact-status.util';
 
 // The platform runs on a UTC server (no TZ set in the Docker image) but
 // the business — and everyone reading this chart — is in Mexico. Without
@@ -19,29 +20,6 @@ function businessDateKey(date: Date): string {
     month: '2-digit',
     day: '2-digit',
   }).format(date);
-}
-
-/**
- * A subscribed contact who's been in at least this many distinct
- * campaigns counts as "Activo" (engaged). Exposed in the response so the
- * admin's copy can never drift from the rule actually applied here.
- */
-const ACTIVE_MIN_CAMPAIGNS = 2;
-
-/**
- * The status shown in Analytics, derived from what contacts actually
- * did — the stored `status` column is only ever LEAD unless someone
- * edits it by hand, so it can't tell you who's engaged:
- *  - Inactivo: cancelled their subscription (or was marked INACTIVE)
- *  - Cliente:  marked CUSTOMER (a purchase can't be inferred from here)
- *  - Activo:   in 2+ distinct campaigns (or marked ACTIVE by hand)
- *  - Lead:     everyone else
- */
-function deriveStatus(contact: { status: string; unsubscribed: boolean }, campaignCount: number): string {
-  if (contact.unsubscribed || contact.status === 'INACTIVE') return 'INACTIVE';
-  if (contact.status === 'CUSTOMER') return 'CUSTOMER';
-  if (contact.status === 'ACTIVE' || campaignCount >= ACTIVE_MIN_CAMPAIGNS) return 'ACTIVE';
-  return 'LEAD';
 }
 
 export interface AnalyticsOverview {
@@ -157,6 +135,8 @@ export class AnalyticsService {
     ]);
 
     // --- Totals + status breakdown -----------------------------------
+    // Campaigns that have gone live (drafts never have subscribers).
+    const activeMin = activeThreshold(campaigns.filter((c) => c.status !== 'DRAFT').length);
     const statusCounts = new Map<string, number>();
     const sourceCounts = new Map<string, number>();
     let unsubscribed = 0;
@@ -165,10 +145,7 @@ export class AnalyticsService {
     const growthCounts = new Map<string, number>(); // date (YYYY-MM-DD) -> count
 
     for (const contact of contacts) {
-      const campaignCount = new Set(
-        contact.sources.map((s) => s.campaignId).filter((id): id is string => id !== null),
-      ).size;
-      const derived = deriveStatus(contact, campaignCount);
+      const derived = deriveContactStatus(contact, distinctCampaigns(contact.sources), activeMin);
       statusCounts.set(derived, (statusCounts.get(derived) ?? 0) + 1);
 
       const latestSource = contact.sources[0];
@@ -217,7 +194,7 @@ export class AnalyticsService {
         newInWindow,
         newThisWeek,
         weekStart,
-        activeMinCampaigns: ACTIVE_MIN_CAMPAIGNS,
+        activeMinCampaigns: activeMin,
         campaigns: campaigns.length,
         campaignsActive: campaigns.filter((c) => c.status === 'ACTIVE').length,
         emailsSent: emailsSentTotal,

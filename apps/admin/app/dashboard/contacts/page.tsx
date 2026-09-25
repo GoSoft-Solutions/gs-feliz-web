@@ -1,6 +1,6 @@
 'use client';
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { contactsApi, CONTACTS_PAGE_SIZE, type Contact } from '../../../lib/api';
+import { contactStatusLabel, contactsApi, CONTACTS_PAGE_SIZE, type Contact } from '../../../lib/api';
 import { PageHeader } from '../../../components/page-header';
 import { IconChevron, IconContacts, IconEdit, IconHistory, IconMail, IconSearch, IconTrash } from '../../../components/icons';
 import { EmailPreview, RichEditor } from '../../../components/email-editor';
@@ -234,7 +234,7 @@ export default function ContactsPage() {
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{fullName(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{c.email ?? '-'}</td>
-                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{c.status}</span></td>
+                  <td className="px-6 py-4"><span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{contactStatusLabel(c)}</span></td>
                   <td className="px-6 py-4 text-sm text-gray-600 capitalize">{sourceLabel(c)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">

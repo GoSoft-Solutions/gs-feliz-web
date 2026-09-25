@@ -4,6 +4,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { EmailService } from '../../email/email.service';
 import { buildEmailDocument } from '../../email/email-render.util';
 import { normalizeEmail } from '../../../common/utils/normalize-email.util';
+import { activeThreshold, deriveContactStatus, distinctCampaigns } from '../../../common/utils/contact-status.util';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ListContactsQueryDto } from './dto/list-contacts-query.dto';
@@ -60,7 +61,7 @@ export class ContactsService {
         : {}),
     };
 
-    const [items, total] = await Promise.all([
+    const [items, total, liveCampaigns] = await Promise.all([
       this.prisma.contact.findMany({
         where,
         // id as a tiebreaker: contacts created in bulk share a createdAt,
@@ -78,10 +79,17 @@ export class ContactsService {
         },
       }),
       this.prisma.contact.count({ where }),
+      this.prisma.campaign.count({ where: { status: { not: 'DRAFT' } } }),
     ]);
 
+    // Same rule Analytics uses, so the table and the charts never disagree.
+    const threshold = activeThreshold(liveCampaigns);
+
     return {
-      items,
+      items: items.map((c) => ({
+        ...c,
+        derivedStatus: deriveContactStatus(c, distinctCampaigns(c.sources), threshold),
+      })),
       total,
       page,
       pageSize,

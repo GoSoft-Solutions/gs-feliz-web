@@ -234,10 +234,9 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <div className="flex items-baseline justify-between gap-3 mb-4">
                 <h3 className="text-sm font-semibold text-gray-700">Contactos por estado</h3>
-                {/* Headline: share of contacts that are actually engaged. */}
                 <p className="text-sm text-gray-500">
-                  <span className="font-display text-2xl tracking-wide text-ink">{statusSegments.find((s) => s.status === 'ACTIVE')?.pct ?? 0}%</span>{' '}
-                  activos
+                  <span className="font-display text-2xl tracking-wide text-ink">{data.totals.contacts}</span>{' '}
+                  contactos
                 </p>
               </div>
               <div className="h-3 rounded-full overflow-hidden flex bg-gray-100">
@@ -263,7 +262,7 @@ export default function AnalyticsPage() {
               </div>
               {/* The rules behind the numbers, so nobody has to guess. */}
               <p className="mt-5 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-400">
-                <strong className="font-medium text-gray-500">Activo:</strong> ha estado en {data.totals.activeMinCampaigns} o más campañas ·{' '}
+                <strong className="font-medium text-gray-500">Activo:</strong> ha estado en {data.totals.activeMinCampaigns} o más campañas (cerca del 80% de las que has lanzado) ·{' '}
                 <strong className="font-medium text-gray-500">Inactivo:</strong> canceló su suscripción ·{' '}
                 <strong className="font-medium text-gray-500">Lead:</strong> el resto.
               </p>

@@ -57,6 +57,8 @@ export interface Contact {
   lastName: string | null;
   phone: string | null;
   status: string;
+  /** Status computed from activity (same rule as Analíticas); `status` is the hand-edited one. */
+  derivedStatus?: string;
   createdAt: string;
   sources?: ContactSource[];
 }
@@ -237,4 +239,17 @@ export async function uploadToS3(uploadUrl: string, file: File): Promise<void> {
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
   });
   if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  LEAD: 'Lead',
+  ACTIVE: 'Activo',
+  CUSTOMER: 'Cliente',
+  INACTIVE: 'Inactivo',
+};
+
+/** Label for the status shown in tables: derived from activity when available. */
+export function contactStatusLabel(c: { status: string; derivedStatus?: string }): string {
+  const s = c.derivedStatus ?? c.status;
+  return STATUS_LABELS[s] ?? s;
 }
